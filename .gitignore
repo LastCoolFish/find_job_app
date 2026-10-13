@@ -1,0 +1,71 @@
+# ── Build output & caches ────────────────────────────────────────────
+/build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/coverage/
+**/doc/api/
+
+# ── IDE / editor ─────────────────────────────────────────────────────
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+.DS_Store
+.history
+
+# ── Local tooling ────────────────────────────────────────────────────
+.claude/
+
+# ── Secrets: never commit ────────────────────────────────────────────
+.env
+.env.*
+*.keystore
+*.jks
+**/key.properties
+**/google-services.json
+**/GoogleService-Info.plist
+
+# ── Logs ─────────────────────────────────────────────────────────────
+*.log
+
+# ── Obfuscation / symbols (release builds) ───────────────────────────
+app.*.symbols
+app.*.map.json
+
+# ── Android ──────────────────────────────────────────────────────────
+/android/.gradle/
+/android/.kotlin/
+/android/captures/
+/android/local.properties
+/android/gradlew
+/android/gradlew.bat
+/android/**/gradle-wrapper.jar
+/android/**/GeneratedPluginRegistrant.java
+/android/**/.cxx/
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+
+# ── iOS / macOS ──────────────────────────────────────────────────────
+**/Pods/
+**/.symlinks/
+**/xcuserdata/
+**/DerivedData/
+/ios/Flutter/.last_build_id
+/ios/Flutter/App.framework
+/ios/Flutter/Flutter.framework
+/ios/Flutter/Flutter.podspec
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/ephemeral/
+/ios/Flutter/flutter_export_environment.sh
+/ios/Runner/GeneratedPluginRegistrant.*
+/macos/Flutter/ephemeral/
+
+# ── Linux / Windows ──────────────────────────────────────────────────
+/linux/flutter/ephemeral/
+/windows/flutter/ephemeral/

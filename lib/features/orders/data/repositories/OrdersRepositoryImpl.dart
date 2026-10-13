@@ -1,0 +1,24 @@
+import 'package:find_job_app/core/error/Exceptions.dart';
+import 'package:find_job_app/core/error/Failures.dart';
+import 'package:find_job_app/core/utils/Result.dart';
+import 'package:find_job_app/features/orders/data/datasources/OrdersRemoteDataSource.dart';
+import 'package:find_job_app/features/orders/domain/entities/OrderEntity.dart';
+import 'package:find_job_app/features/orders/domain/repositories/OrdersRepository.dart';
+
+class OrdersRepositoryImpl implements OrdersRepository {
+  final OrdersRemoteDataSource remoteDataSource;
+
+  OrdersRepositoryImpl(this.remoteDataSource);
+
+  @override
+  Future<Result<List<OrderEntity>>> getOrders() async {
+    try {
+      final orders = await remoteDataSource.getOrders();
+      return Success(orders);
+    } on NetworkException catch (e) {
+      return Failed(NetworkFailure(e.message));
+    } on ServerException catch (e) {
+      return Failed(ServerFailure(e.message));
+    }
+  }
+}
