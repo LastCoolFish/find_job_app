@@ -35,6 +35,19 @@ class _VacanciesPageState extends State<VacanciesPage> {
     });
   }
 
+  void _openFilters() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) => SizedBox(
+        // Empty for now, filters will go here.
+        width: double.infinity,
+        height: MediaQuery.of(context).size.height * 0.5,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,15 +60,27 @@ class _VacanciesPageState extends State<VacanciesPage> {
         ),
         clipBehavior: Clip.antiAlias,
         title: const Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Symbols.person_search, size: 32, weight: 700),
             SizedBox(width: 10),
-            Text(
-              'FindJob',
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+            Flexible(
+              child: Text(
+                'FindJob',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+              ),
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            onPressed: _openFilters,
+            tooltip: 'Фильтры',
+            icon: const Icon(Symbols.tune, size: 28, weight: 600),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: FutureBuilder<Result<List<VacancyEntity>>>(
         future: _future,

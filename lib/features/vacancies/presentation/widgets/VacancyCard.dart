@@ -26,11 +26,10 @@ class VacancyCard extends StatelessWidget {
   // API stores grade as 0..4.
   static const _grades = ['Intern', 'Junior', 'Middle', 'Senior', 'Lead'];
 
-  static const _cardColor = AppColors.card;
-  static const _textColor = AppColors.ink;
-  static const _mutedColor = AppColors.muted;
-  static const _salaryColor = AppColors.salary;
-  static const _accentColor = AppColors.sage;
+  static Color get _cardColor => AppColors.card;
+  static Color get _textColor => AppColors.ink;
+  static Color get _mutedColor => AppColors.muted;
+  static Color get _salaryColor => AppColors.salary;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +74,7 @@ class VacancyCard extends StatelessWidget {
                                 ),
                                 if (vacancy.company.accreditation) ...[
                                   const SizedBox(width: 4),
-                                  const Icon(Symbols.verified, size: 16, color: _accentColor, fill: 1),
+                                  Icon(Symbols.verified, size: 16, color: AppColors.accent, fill: 1),
                                 ],
                               ],
                             ),
@@ -118,8 +117,8 @@ class VacancyCard extends StatelessWidget {
                               Tag(
                                 label: _grades[grade],
                                 icon: Symbols.stacks,
-                                background: AppColors.pale,
-                                foreground: AppColors.sage,
+                                background: AppColors.tertiary,
+                                foreground: AppColors.ink,
                               ),
                             if (format != null)
                               Tag(label: format, icon: Symbols.work),
@@ -147,8 +146,8 @@ class VacancyCard extends StatelessWidget {
                           FilledButton(
                             onPressed: onDetails,
                             style: FilledButton.styleFrom(
-                              backgroundColor: _accentColor,
-                              foregroundColor: Colors.white,
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.onPrimary,
                               textStyle: const TextStyle(fontWeight: FontWeight.w600),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -224,13 +223,13 @@ class _CompanyLogo extends StatelessWidget {
       height: 48,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.cream,
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         initials,
-        style: const TextStyle(
-          color: AppColors.sage,
+        style: TextStyle(
+          color: AppColors.accent,
           fontSize: 18,
           fontWeight: FontWeight.w800,
         ),

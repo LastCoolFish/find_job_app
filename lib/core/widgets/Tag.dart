@@ -6,18 +6,16 @@ import 'package:find_job_app/core/theme/AppColors.dart';
 class Tag extends StatelessWidget {
   final String label;
   final IconData? icon;
-  final Color background;
-  final Color foreground;
-
-  static const defaultBackground = AppColors.cream;
-  static const defaultForeground = AppColors.ink;
+  // Null means "use the active palette" (AppColors).
+  final Color? background;
+  final Color? foreground;
 
   const Tag({
     super.key,
     required this.label,
     this.icon,
-    this.background = defaultBackground,
-    this.foreground = defaultForeground,
+    this.background,
+    this.foreground,
   });
 
   @override
@@ -25,21 +23,21 @@ class Tag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: background,
+        color: background ?? AppColors.background,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 16, color: foreground),
+            Icon(icon, size: 16, color: foreground ?? AppColors.ink),
             const SizedBox(width: 6),
           ],
           Flexible(
             child: Text(
               label,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: defaultForeground, fontSize: 13),
+              style: TextStyle(color: AppColors.ink, fontSize: 13),
             ),
           ),
         ],
