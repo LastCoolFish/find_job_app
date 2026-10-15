@@ -64,7 +64,9 @@
 | [`data/models/CompanyModel.dart`](features/vacancies/data/models/CompanyModel.dart) | data | `CompanyEntity` + `fromJson`. |
 | [`data/datasources/VacanciesRemoteDataSource.dart`](features/vacancies/data/datasources/VacanciesRemoteDataSource.dart) | data | Делает `GET /vacancies` через `ApiClient`, конвертирует ошибки Dio в `NetworkException`/`ServerException`. |
 | [`data/repositories/VacanciesRepositoryImpl.dart`](features/vacancies/data/repositories/VacanciesRepositoryImpl.dart) | data | Реализация интерфейса: вызывает datasource, ловит исключения, возвращает `Result<List<VacancyEntity>>`. |
-| [`presentation/pages/VacanciesPage.dart`](features/vacancies/presentation/pages/VacanciesPage.dart) | presentation | Экран целиком: в `initState` запускает `getVacancies()` и сохраняет `Future` в поле, а `FutureBuilder` рисует загрузку / ошибку / список. В шапке — иконка `Symbols.person_search` (пакет `material_symbols_icons`) и надпись «FindJob». «Повторить» создаёт новый `Future` через `setState`. |
+| [`presentation/pages/VacanciesPage.dart`](features/vacancies/presentation/pages/VacanciesPage.dart) | presentation | Экран целиком с подгрузкой при прокрутке: грузит вакансии страницами по 20 (`offset`/`limit`), следующую страницу запрашивает, когда до конца списка остаётся меньше 600 px (`ScrollController`). Внизу списка — крутилка или кнопка «Повторить». В шапке — иконка `Symbols.person_search`, надпись «FindJob» и кнопка фильтров (пока пустое окно снизу). |
+| [`domain/entities/VacancyFilters.dart`](features/vacancies/domain/entities/VacancyFilters.dart) | domain | Фильтры поиска: должность, зарплата от, грейд, источник, сортировка. `toQueryParameters()` собирает параметры для `GET /vacancies/search`. Обходит особенности API: по умолчанию сортирует по `id` (иначе страницы повторяются), при сортировке по зарплате прячет вакансии без неё. Фильтра по городу нет: сервер не находит текст на кириллице. |
+| [`presentation/widgets/VacancyFiltersSheet.dart`](features/vacancies/presentation/widgets/VacancyFiltersSheet.dart) | presentation | Окно фильтров снизу. «Показать» закрывает окно и возвращает новые `VacancyFilters`, «Сбросить» очищает форму. |
 | [`presentation/widgets/VacancyCard.dart`](features/vacancies/presentation/widgets/VacancyCard.dart) | presentation | Карточка одной вакансии: компания, должность, зарплата, грейд/формат/город, навыки, кнопки «Подробнее» (открывает вакансию на hh.ru / Хабр Карьере) и «В избранное». |
 
 ## `features/skills` — справочник навыков (`GET /skills`)
@@ -136,5 +138,5 @@
 ## Как добавить presentation-слой для новой фичи
 
 Только `vacancies` доведена до экрана. Чтобы показать `orders`/`profile`/`skills`/`analytics` пользователю, нужно по образцу `features/vacancies/presentation/*` создать:
-1. `<Feature>Page.dart` — `StatefulWidget`: в `initState` сохранить `Future` метода репозитория (`sl<<Feature>Repository>()`) в поле и отдать его в `FutureBuilder`.
+1. `<Feature>Page.dart` — `StatefulWidget`: в `initState` вызвать метод репозитория (`sl<<Feature>Repository>()`), хранить данные / `_isLoading` / `_error` в полях и обновлять через `setState` (пример с пагинацией — `VacanciesPage`).
 2. Показывать `LoadingIndicator` / `ErrorView` из `core/widgets`, пока данные грузятся или если пришла ошибка.

@@ -24,7 +24,7 @@ class VacancyCard extends StatelessWidget {
   static const _maxSkills = 4;
 
   // API stores grade as 0..4.
-  static const _grades = ['Intern', 'Junior', 'Middle', 'Senior', 'Lead'];
+  static const grades = ['Intern', 'Junior', 'Middle', 'Senior', 'Lead'];
 
   static Color get _cardColor => AppColors.card;
   static Color get _textColor => AppColors.ink;
@@ -113,9 +113,9 @@ class VacancyCard extends StatelessWidget {
                           spacing: 6,
                           runSpacing: 6,
                           children: [
-                            if (grade != null && grade >= 0 && grade < _grades.length)
+                            if (grade != null && grade >= 0 && grade < grades.length)
                               Tag(
-                                label: _grades[grade],
+                                label: grades[grade],
                                 icon: Symbols.stacks,
                                 background: AppColors.tertiary,
                                 foreground: AppColors.ink,

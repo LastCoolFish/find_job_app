@@ -3,9 +3,8 @@ import 'package:find_job_app/core/error/Failures.dart';
 import 'package:find_job_app/core/utils/Result.dart';
 import 'package:find_job_app/features/vacancies/data/datasources/VacanciesRemoteDataSource.dart';
 import 'package:find_job_app/features/vacancies/domain/entities/VacancyEntity.dart';
+import 'package:find_job_app/features/vacancies/domain/entities/VacancyFilters.dart';
 import 'package:find_job_app/features/vacancies/domain/repositories/VacanciesRepository.dart';
-
-import '../../../../core/utils/Enums.dart';
 
 class VacanciesRepositoryImpl implements VacanciesRepository {
   final VacanciesRemoteDataSource remoteDataSource;
@@ -14,17 +13,15 @@ class VacanciesRepositoryImpl implements VacanciesRepository {
 
   @override
   Future<Result<List<VacancyEntity>>> getVacancies({
-    VacanciesSortBy? sortBy,
+    VacancyFilters filters = const VacancyFilters(),
     int offset = 0,
     int limit = 20,
-    Order order = Order.asc,
   }) async {
     try {
       final vacancies = await remoteDataSource.getVacancies(
-        sortBy: sortBy,
+        filters: filters,
         offset: offset,
         limit: limit,
-        order: order,
       );
       return Success(vacancies);
     } on NetworkException catch (e) {
