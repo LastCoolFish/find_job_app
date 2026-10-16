@@ -30,4 +30,15 @@ class VacanciesRepositoryImpl implements VacanciesRepository {
       return Failed(ServerFailure(e.message));
     }
   }
+
+  @override
+  Future<Result<List<String>>> getPlatforms() async {
+    try {
+      return Success(await remoteDataSource.getPlatforms());
+    } on NetworkException catch (e) {
+      return Failed(NetworkFailure(e.message));
+    } on ServerException catch (e) {
+      return Failed(ServerFailure(e.message));
+    }
+  }
 }

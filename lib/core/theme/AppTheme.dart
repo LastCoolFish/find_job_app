@@ -50,6 +50,25 @@ class AppTheme {
         ),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(color: p.accent),
+      navigationBarTheme: NavigationBarThemeData(
+        // Same colour as the app bar, so the bar doesn't blend with the cards.
+        backgroundColor: p.tertiary,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: p.primary,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected) ? p.onPrimary : p.muted,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => TextStyle(
+            color: states.contains(WidgetState.selected) ? p.ink : p.muted,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w700
+                : FontWeight.w500,
+          ),
+        ),
+      ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: p.card,
         surfaceTintColor: Colors.transparent,

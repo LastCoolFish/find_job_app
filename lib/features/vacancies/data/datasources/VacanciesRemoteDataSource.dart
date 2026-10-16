@@ -10,6 +10,9 @@ abstract class VacanciesRemoteDataSource {
     int offset = 0,
     int limit = 20,
   });
+
+  /// Distinct platform codes, e.g. ['habr', 'hh'].
+  Future<List<String>> getPlatforms();
 }
 
 class VacanciesRemoteDataSourceImpl implements VacanciesRemoteDataSource {
@@ -38,6 +41,19 @@ class VacanciesRemoteDataSourceImpl implements VacanciesRemoteDataSource {
       return data
           .map((json) => VacancyModel.fromJson(json as Map<String, dynamic>))
           .toList();
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionError) {
+        throw const NetworkException();
+      }
+      throw ServerException(e.message ?? 'Server error');
+    }
+  }
+
+  @override
+  Future<List<String>> getPlatforms() async {
+    try {
+      final response = await apiClient.dio.get('/vacancies/platforms');
+      return (response.data as List<dynamic>).cast<String>();
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionError) {
         throw const NetworkException();

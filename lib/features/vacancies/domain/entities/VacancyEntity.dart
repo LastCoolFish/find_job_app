@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:find_job_app/features/skills/domain/entities/SkillEntity.dart';
+import 'package:find_job_app/features/vacancies/domain/entities/SkillEntity.dart';
 import 'package:find_job_app/features/vacancies/domain/entities/CompanyEntity.dart';
 
 /// Matches `VacancyOutSchema` from the FastAPI backend.

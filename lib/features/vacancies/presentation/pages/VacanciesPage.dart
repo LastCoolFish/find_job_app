@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:find_job_app/core/di/InjectionContainer.dart';
+import 'package:find_job_app/core/utils/Result.dart';
 import 'package:find_job_app/core/widgets/ErrorView.dart';
+import 'package:find_job_app/core/widgets/FindJobAppBar.dart';
 import 'package:find_job_app/core/widgets/LoadingIndicator.dart';
 import 'package:find_job_app/features/vacancies/domain/entities/VacancyEntity.dart';
 import 'package:find_job_app/features/vacancies/domain/entities/VacancyFilters.dart';
@@ -32,6 +34,9 @@ class _VacanciesPageState extends State<VacanciesPage> {
   bool _hasMore = true;
   String? _error;
   VacancyFilters _filters = const VacancyFilters();
+
+  // Loaded lazily on the first filters open and reused afterwards.
+  Future<Result<List<String>>>? _platforms;
 
   // Bumped every time the filters change, so a page that was requested with
   // the old filters and arrives late gets thrown away instead of mixed in.
@@ -90,11 +95,18 @@ class _VacanciesPageState extends State<VacanciesPage> {
   }
 
   Future<void> _openFilters() async {
+    _platforms ??= _repository.getPlatforms();
+    // Don't keep a failed request cached: try again on the next open.
+    _platforms!.then((r) => r.when(success: (_) {}, failure: (_) => _platforms = null));
+
     final result = await showModalBottomSheet<VacancyFilters>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (context) => VacancyFiltersSheet(initial: _filters),
+      builder: (context) => VacancyFiltersSheet(
+        initial: _filters,
+        platforms: _platforms!,
+      ),
     );
     // null = sheet was swiped away; same filters = nothing to reload.
     if (result == null || result == _filters) return;
@@ -121,25 +133,7 @@ class _VacanciesPageState extends State<VacanciesPage> {
       // Let the list scroll under the app bar, otherwise the rounded corners
       // would only reveal the plain scaffold background.
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        title: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Symbols.person_search, size: 32, weight: 700),
-            SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                'FindJob',
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
-              ),
-            ),
-          ],
-        ),
+      appBar: FindJobAppBar(
         actions: [
           IconButton(
             onPressed: _openFilters,
@@ -151,7 +145,6 @@ class _VacanciesPageState extends State<VacanciesPage> {
               child: const Icon(Symbols.tune, size: 28, weight: 600),
             ),
           ),
-          const SizedBox(width: 8),
         ],
       ),
       body: _buildBody(),

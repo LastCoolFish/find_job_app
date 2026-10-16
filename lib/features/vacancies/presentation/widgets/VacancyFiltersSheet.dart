@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:find_job_app/core/theme/AppColors.dart';
 import 'package:find_job_app/core/utils/Enums.dart';
+import 'package:find_job_app/core/utils/Result.dart';
+import 'package:find_job_app/core/widgets/FilterSheetParts.dart';
 import 'package:find_job_app/features/vacancies/domain/entities/VacancyFilters.dart';
 import 'package:find_job_app/features/vacancies/presentation/widgets/VacancyCard.dart';
 
@@ -10,7 +11,15 @@ import 'package:find_job_app/features/vacancies/presentation/widgets/VacancyCard
 class VacancyFiltersSheet extends StatefulWidget {
   final VacancyFilters initial;
 
-  const VacancyFiltersSheet({super.key, required this.initial});
+  /// Platform codes from `GET /vacancies/platforms`. Passed in from the page
+  /// so the request is made once, not every time the sheet opens.
+  final Future<Result<List<String>>> platforms;
+
+  const VacancyFiltersSheet({
+    super.key,
+    required this.initial,
+    required this.platforms,
+  });
 
   @override
   State<VacancyFiltersSheet> createState() => _VacancyFiltersSheetState();
@@ -25,8 +34,6 @@ class _SortOption {
 }
 
 class _VacancyFiltersSheetState extends State<VacancyFiltersSheet> {
-  static const _platforms = {'hh': 'hh.ru', 'habr': 'Хабр Карьера'};
-
   static const _sortOptions = [
     _SortOption('По умолчанию', null, Order.asc),
     _SortOption('Сначала высокая зарплата', VacanciesSortBy.salary, Order.desc),
@@ -88,149 +95,56 @@ class _VacancyFiltersSheetState extends State<VacancyFiltersSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Padding(
-      // Lift the sheet above the keyboard while typing.
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Фильтры',
-                    style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-                  ),
-                ),
-                TextButton(onPressed: _reset, child: const Text('Сбросить')),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            _sectionTitle('Должность'),
-            TextField(
-              controller: _jobTitleController,
-              textInputAction: TextInputAction.next,
-              decoration: _inputDecoration('Например, Python или Java'),
-            ),
-            const SizedBox(height: 16),
-
-            _sectionTitle('Зарплата от, ₽'),
-            TextField(
-              controller: _salaryController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: _inputDecoration('Например, 150000'),
-            ),
-            const SizedBox(height: 16),
-
-            _sectionTitle('Грейд'),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (var i = 0; i < VacancyCard.grades.length; i++)
-                  _choice(
-                    label: VacancyCard.grades[i],
-                    selected: _grade == i,
-                    // Tapping the selected chip again clears it.
-                    onTap: () => setState(() => _grade = _grade == i ? null : i),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            _sectionTitle('Источник'),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final entry in _platforms.entries)
-                  _choice(
-                    label: entry.value,
-                    selected: _platform == entry.key,
-                    onTap: () => setState(
-                      () => _platform = _platform == entry.key ? null : entry.key,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            _sectionTitle('Сортировка'),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final option in _sortOptions)
-                  _choice(
-                    label: option.label,
-                    selected: _sort == option,
-                    onTap: () => setState(() => _sort = option),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: FilledButton(
-                onPressed: _apply,
-                style: FilledButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                ),
-                child: const Text('Показать'),
-              ),
-            ),
-          ],
+    return FilterSheetFrame(
+      onReset: _reset,
+      onApply: _apply,
+      children: [
+        FilterSection(
+          title: 'Должность',
+          child: TextField(
+            controller: _jobTitleController,
+            textInputAction: TextInputAction.next,
+            decoration: filterInputDecoration('Например, Python или Java'),
+          ),
         ),
-      ),
+        FilterSection(
+          title: 'Зарплата от, ₽',
+          child: TextField(
+            controller: _salaryController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: filterInputDecoration('Например, 150000'),
+          ),
+        ),
+        FilterSection(
+          title: 'Грейд',
+          child: FilterChoices<int>(
+            values: List.generate(VacancyCard.grades.length, (i) => i),
+            selected: _grade,
+            labelOf: (i) => VacancyCard.grades[i],
+            onChanged: (value) => setState(() => _grade = value),
+          ),
+        ),
+        FilterSection(
+          title: 'Источник',
+          child: PlatformChoices(
+            platforms: widget.platforms,
+            selected: _platform,
+            onChanged: (value) => setState(() => _platform = value),
+          ),
+        ),
+        FilterSection(
+          title: 'Сортировка',
+          child: FilterChoices<_SortOption>(
+            values: _sortOptions,
+            selected: _sort,
+            labelOf: (option) => option.label,
+            // One sort option is always selected.
+            allowNone: false,
+            onChanged: (value) => setState(() => _sort = value!),
+          ),
+        ),
+      ],
     );
   }
-
-  Widget _sectionTitle(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Text(
-          text,
-          style: TextStyle(color: AppColors.ink, fontWeight: FontWeight.w700),
-        ),
-      );
-
-  InputDecoration _inputDecoration(String hint) => InputDecoration(
-        hintText: hint,
-        filled: true,
-        fillColor: AppColors.background,
-        isDense: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-      );
-
-  Widget _choice({
-    required String label,
-    required bool selected,
-    required VoidCallback onTap,
-  }) =>
-      ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) => onTap(),
-        showCheckmark: false,
-        selectedColor: AppColors.primary,
-        backgroundColor: AppColors.background,
-        labelStyle: TextStyle(
-          color: selected ? AppColors.onPrimary : AppColors.ink,
-          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-        ),
-        side: BorderSide.none,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      );
 }

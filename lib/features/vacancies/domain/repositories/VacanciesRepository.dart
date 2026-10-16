@@ -8,4 +8,7 @@ abstract class VacanciesRepository {
     int offset = 0,
     int limit = 20,
   });
+
+  /// Distinct platform codes, e.g. ['habr', 'hh'].
+  Future<Result<List<String>>> getPlatforms();
 }
