@@ -59,15 +59,17 @@
 | [`utils/Result.dart`](utils/Result.dart) | `Result<T>` (sealed class) + `Success<T>`/`Failed<T>` — Either-подобная обёртка. Репозитории возвращают её вместо `throw`, чтобы presentation-слой обрабатывал ошибки через `result.when(success:, failure:)`, а не `try/catch`. |
 | [`di/InjectionContainer.dart`](di/InjectionContainer.dart) | Настройка `get_it` (service locator). Единая точка, где собирается граф зависимостей: `ApiClient → RemoteDataSource → Repository`. Вызывается один раз в `main()`. |
 | [`theme/AppPalette.dart`](theme/AppPalette.dart) | `AppPalette` — один набор цветов (имена по роли: `primary`, `secondary`, `tertiary`, `background`, `onPrimary`, `accent`, `ink`, `muted`, `salary`, `card`). `AppPalettes` — все палитры приложения: `sage`, `sunset`, `sky`, `coffee`, `blush`. Новые палитры добавляются сюда, старые не удаляются. |
-| [`theme/AppColors.dart`](theme/AppColors.dart) | Цвета **активной** палитры, которыми пользуются виджеты. Основная палитра задаётся одной строкой: `static const AppPalette palette = AppPalettes.blush;` |
+| [`theme/AppColors.dart`](theme/AppColors.dart) | Цвета **активной** палитры, которыми пользуются виджеты. Основная палитра задаётся одной строкой: `static const AppPalette palette = AppPalettes.sage;` |
 | [`theme/AppTheme.dart`](theme/AppTheme.dart) | `AppTheme.light` — `ThemeData` из активной палитры, `AppTheme.fromPalette(p)` — из любой: цвета `ColorScheme`, шапки, кнопок, индикатора загрузки. Подключается в `FindJobApp`. |
-| [`widgets/FindJobAppBar.dart`](widgets/FindJobAppBar.dart) | Общая шапка экранов: скруглённый низ, иконка и надпись «FindJob» (или текст из `title`, например «Настройки»). Кнопки экрана передаются через `actions`. Использовать вместе с `Scaffold(extendBodyBehindAppBar: true)`. |
-| [`widgets/InitialsAvatar.dart`](widgets/InitialsAvatar.dart) | Квадратик с инициалами вместо логотипа (компании, заказчика). |
+| [`widgets/FindJobAppBar.dart`](widgets/FindJobAppBar.dart) | Общая шапка экранов: скруглённый низ, иконка и надпись «FindJob» по умолчанию; `title` и `icon` задают свой заголовок и иконку перед ним (`icon: null` — без иконки). Кнопки экрана передаются через `actions`. Использовать вместе с `Scaffold(extendBodyBehindAppBar: true)`. |
+| [`widgets/InitialsAvatar.dart`](widgets/InitialsAvatar.dart) | Квадратик с инициалами вместо логотипа/фото (компании, заказчика, профиля). Размер задаётся `size` (по умолчанию 48). |
 | [`utils/Formatters.dart`](utils/Formatters.dart) | `formatMoney(300000)` → «300 000 ₽», `formatDateTime(date)` → «27 сентября, 13:37». |
 | [`widgets/FilterSheetParts.dart`](widgets/FilterSheetParts.dart) | Общие части окон фильтров: `FilterSheetFrame` (заголовок, «Сбросить», «Показать»), `FilterSection`, `filterInputDecoration`, `FilterChoices<T>` (чипы с одним выбором), `PlatformChoices` (чипы площадок с сервера). |
 | [`widgets/PlaceholderView.dart`](widgets/PlaceholderView.dart) | Заглушка для недоделанных экранов: иконка, заголовок, подпись по центру. |
 | [`widgets/LoadingIndicator.dart`](widgets/LoadingIndicator.dart) | Общий виджет спиннера загрузки, переиспользуется во всех фичах. |
-| [`widgets/ErrorView.dart`](widgets/ErrorView.dart) | Общий виджет отображения ошибки с кнопкой «Повторить» (`onRetry`). |
+| [`widgets/ErrorView.dart`](widgets/ErrorView.dart) | Полноэкранная ошибка: картинка `errorPicture`, под ней текст «404 — ничего не найдено» и кнопка «Повторить» (`onRetry`, текст кнопки — `retryLabel`). С `showArt: false` (низ списка) вместо картинки и «404» показывается `message`. |
+| [`widgets/AsciiArt.dart`](widgets/AsciiArt.dart) | `AsciiArt` — многострочный текст моноширинным шрифтом (картинка занимает не больше `maxWidthFactor` ширины экрана, по умолчанию половину). `errorPicture` и `loadingPicture` — картинки символами Брайля для ошибки и загрузки. |
+| [`widgets/AsciiLoader.dart`](widgets/AsciiLoader.dart) | Полноэкранная загрузка: картинка `loadingPicture` и под ней «Загрузка». Для маленькой крутилки внизу списка — `LoadingIndicator`. |
 | [`widgets/Tag.dart`](widgets/Tag.dart) | Небольшая скруглённая плашка с текстом и необязательной иконкой (грейд, формат работы, навык). Цвета можно переопределить через `background` / `foreground`. |
 
 ---
@@ -108,14 +110,22 @@
 | [`presentation/widgets/OrderFiltersSheet.dart`](features/orders/presentation/widgets/OrderFiltersSheet.dart) | presentation | Окно фильтров заказов: название, цена от/до, площадка (с сервера), сортировка. |
 | [`presentation/widgets/OrderCard.dart`](features/orders/presentation/widgets/OrderCard.dart) | presentation | Карточка заказа: заказчик, площадка, название, цена, описание (до 3 строк, дальше многоточие), дата публикации, кнопка «Подробнее». |
 
-## `features/profile` — профиль
+## `features/profile` — профиль (`GET /profiles/by-user/{id}`, `GET /users/{id}`)
+
+Входа пока нет, поэтому показывается пользователь `EnvConfig.currentUserId` (= 1).
 
 | Файл | Слой | Назначение |
 |---|---|---|
-| [`presentation/pages/ProfilePage.dart`](features/profile/presentation/pages/ProfilePage.dart) | presentation | Вкладка «Профиль». Пока заглушка; шестерёнка в шапке открывает `SettingsPage`. Слой данных (`/profiles`, `/users`) добавим, когда профиль понадобится. |
+| [`domain/entities/ProfileEntity.dart`](features/profile/domain/entities/ProfileEntity.dart) | domain | Профиль соискателя: `username` (ник), `name`, `desiredSalary`, `desiredFormat`, `desiredGrade`, `skills`. Соответствует `ProfileOutSchema`. |
+| [`domain/entities/UserEntity.dart`](features/profile/domain/entities/UserEntity.dart) | domain | Аккаунт: `email`, `phone`, `role`, `createdAt`, `lastLoginAt`. Соответствует `UserOutSchema`. |
+| [`domain/repositories/ProfileRepository.dart`](features/profile/domain/repositories/ProfileRepository.dart) | domain | `getProfileByUser(userId)`, `getUser(userId)`. |
+| [`data/models/ProfileModel.dart`](features/profile/data/models/ProfileModel.dart), [`UserModel.dart`](features/profile/data/models/UserModel.dart) | data | Сущности + `fromJson`. Навыки парсятся через `SkillModel` из `vacancies`. |
+| [`data/datasources/ProfileRemoteDataSource.dart`](features/profile/data/datasources/ProfileRemoteDataSource.dart) | data | `GET /profiles/by-user/{id}` и `GET /users/{id}`. |
+| [`data/repositories/ProfileRepositoryImpl.dart`](features/profile/data/repositories/ProfileRepositoryImpl.dart) | data | Реализация репозитория. |
+| [`presentation/pages/ProfilePage.dart`](features/profile/presentation/pages/ProfilePage.dart) | presentation | Вкладка «Профиль»: аватар с инициалами, ник крупно и имя под ним; блоки «Что ищу» (зарплата, формат, грейд), «Аккаунт» (email, телефон, дата регистрации) и «Навыки» (`Tag`). Пустые поля — «Не указано». Профиль и аккаунт грузятся параллельно через `FutureBuilder`. Шестерёнка открывает `SettingsPage`. |
 
 ## Как добавить presentation-слой для новой фичи
 
-До экрана доведены `vacancies` и `orders`, у `home`/`profile`/`settings` — заглушки. Новые фичи создаём по мере надобности. Чтобы показать новую фичу пользователю, нужно по образцу `features/vacancies/presentation/*` создать:
+До экрана доведены `vacancies` и `orders`, `profile` показывает данные с сервера, у `home`/`settings` — заглушки. Новые фичи создаём по мере надобности. Чтобы показать новую фичу пользователю, нужно по образцу `features/vacancies/presentation/*` создать:
 1. `<Feature>Page.dart` — `StatefulWidget`: в `initState` вызвать метод репозитория (`sl<<Feature>Repository>()`), хранить данные / `_isLoading` / `_error` в полях и обновлять через `setState` (пример с пагинацией — `VacanciesPage`).
 2. Показывать `LoadingIndicator` / `ErrorView` из `core/widgets`, пока данные грузятся или если пришла ошибка.

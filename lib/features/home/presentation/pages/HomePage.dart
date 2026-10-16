@@ -11,7 +11,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: FindJobAppBar(),
+      appBar: FindJobAppBar(icon: Symbols.home),
       body: PlaceholderView(
         icon: Symbols.home,
         title: 'Главная',

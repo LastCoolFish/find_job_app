@@ -5,8 +5,9 @@ import 'package:find_job_app/core/theme/AppColors.dart';
 /// since the API has no company/customer images.
 class InitialsAvatar extends StatelessWidget {
   final String name;
+  final double size;
 
-  const InitialsAvatar({super.key, required this.name});
+  const InitialsAvatar({super.key, required this.name, this.size = 48});
 
   @override
   Widget build(BuildContext context) {
@@ -17,18 +18,18 @@ class InitialsAvatar extends StatelessWidget {
     final initials = words.take(2).map((w) => w[0].toUpperCase()).join();
 
     return Container(
-      width: 48,
-      height: 48,
+      width: size,
+      height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(size / 4),
       ),
       child: Text(
         initials,
         style: TextStyle(
           color: AppColors.accent,
-          fontSize: 18,
+          fontSize: size * 0.375,
           fontWeight: FontWeight.w800,
         ),
       ),

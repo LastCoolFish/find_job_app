@@ -3,6 +3,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:find_job_app/core/di/InjectionContainer.dart';
 import 'package:find_job_app/core/utils/Result.dart';
+import 'package:find_job_app/core/widgets/AsciiLoader.dart';
 import 'package:find_job_app/core/widgets/ErrorView.dart';
 import 'package:find_job_app/core/widgets/FindJobAppBar.dart';
 import 'package:find_job_app/core/widgets/LoadingIndicator.dart';
@@ -134,6 +135,7 @@ class _VacanciesPageState extends State<VacanciesPage> {
       // would only reveal the plain scaffold background.
       extendBodyBehindAppBar: true,
       appBar: FindJobAppBar(
+        icon: Symbols.work,
         actions: [
           IconButton(
             onPressed: _openFilters,
@@ -157,7 +159,7 @@ class _VacanciesPageState extends State<VacanciesPage> {
       if (_error != null) {
         return ErrorView(message: _error!, onRetry: _loadNextPage);
       }
-      if (_isLoading || _hasMore) return const LoadingIndicator();
+      if (_isLoading || _hasMore) return const AsciiLoader();
       if (_filters.activeCount > 0) {
         return ErrorView(
           message: 'По этим фильтрам ничего не нашлось',
@@ -194,7 +196,7 @@ class _VacanciesPageState extends State<VacanciesPage> {
     if (_error != null) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        child: ErrorView(message: _error!, onRetry: _loadNextPage),
+        child: ErrorView(message: _error!, onRetry: _loadNextPage, showArt: false),
       );
     }
     return const Padding(

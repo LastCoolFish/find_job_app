@@ -7,7 +7,7 @@ class AppColors {
 
   /// Active palette. Change this line to switch the whole app's colours
   /// (see [AppPalettes] for the available ones).
-  static const AppPalette palette = AppPalettes.blush;
+  static const AppPalette palette = AppPalettes.sage;
 
   static Color get primary => palette.primary;
   static Color get secondary => palette.secondary;
