@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:find_job_app/core/theme/AppColors.dart';
+import 'package:find_job_app/core/utils/Formatters.dart';
+import 'package:find_job_app/core/widgets/InitialsAvatar.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:find_job_app/core/widgets/Tag.dart';
-import 'package:find_job_app/features/vacancies/domain/entities/CompanyEntity.dart';
 import 'package:find_job_app/features/vacancies/domain/entities/VacancyEntity.dart';
 
 class VacancyCard extends StatelessWidget {
@@ -24,13 +25,12 @@ class VacancyCard extends StatelessWidget {
   static const _maxSkills = 4;
 
   // API stores grade as 0..4.
-  static const _grades = ['Intern', 'Junior', 'Middle', 'Senior', 'Lead'];
+  static const grades = ['Intern', 'Junior', 'Middle', 'Senior', 'Lead'];
 
-  static const _cardColor = AppColors.card;
-  static const _textColor = AppColors.ink;
-  static const _mutedColor = AppColors.muted;
-  static const _salaryColor = AppColors.salary;
-  static const _accentColor = AppColors.sage;
+  static Color get _cardColor => AppColors.card;
+  static Color get _textColor => AppColors.ink;
+  static Color get _mutedColor => AppColors.muted;
+  static Color get _salaryColor => AppColors.salary;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +54,7 @@ class VacancyCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _CompanyLogo(company: vacancy.company),
+                InitialsAvatar(name: vacancy.company.name),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -75,14 +75,14 @@ class VacancyCard extends StatelessWidget {
                                 ),
                                 if (vacancy.company.accreditation) ...[
                                   const SizedBox(width: 4),
-                                  const Icon(Symbols.verified, size: 16, color: _accentColor, fill: 1),
+                                  Icon(Symbols.verified, size: 16, color: AppColors.accent, fill: 1),
                                 ],
                               ],
                             ),
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            _platformLabel(vacancy.platform),
+                            vacancy.platform,
                             style: textTheme.bodySmall?.copyWith(color: _mutedColor),
                           ),
                         ],
@@ -99,7 +99,7 @@ class VacancyCard extends StatelessWidget {
                       if (vacancy.salary != null) ...[
                         const SizedBox(height: 8),
                         Text(
-                          _formatSalary(vacancy.salary!),
+                          formatMoney(vacancy.salary!),
                           style: textTheme.titleMedium?.copyWith(
                               color: _salaryColor,
                               fontWeight: FontWeight.w800,
@@ -114,12 +114,12 @@ class VacancyCard extends StatelessWidget {
                           spacing: 6,
                           runSpacing: 6,
                           children: [
-                            if (grade != null && grade >= 0 && grade < _grades.length)
+                            if (grade != null && grade >= 0 && grade < grades.length)
                               Tag(
-                                label: _grades[grade],
+                                label: grades[grade],
                                 icon: Symbols.stacks,
-                                background: AppColors.pale,
-                                foreground: AppColors.sage,
+                                background: AppColors.tertiary,
+                                foreground: AppColors.ink,
                               ),
                             if (format != null)
                               Tag(label: format, icon: Symbols.work),
@@ -147,8 +147,8 @@ class VacancyCard extends StatelessWidget {
                           FilledButton(
                             onPressed: onDetails,
                             style: FilledButton.styleFrom(
-                              backgroundColor: _accentColor,
-                              foregroundColor: Colors.white,
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.onPrimary,
                               textStyle: const TextStyle(fontWeight: FontWeight.w600),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -186,55 +186,5 @@ class VacancyCard extends StatelessWidget {
     if (f.contains('гибрид')) return 'Гибрид';
     if (f.contains('мест')) return 'В офисе';
     return raw;
-  }
-
-  static String _platformLabel(String platform) => switch (platform) {
-        'hh' => 'hh.ru',
-        'habr' => 'Хабр Карьера',
-        _ => platform,
-      };
-
-  static String _formatSalary(int value) {
-    final digits = value.toString();
-    final buffer = StringBuffer();
-    for (var i = 0; i < digits.length; i++) {
-      if (i > 0 && (digits.length - i) % 3 == 0) buffer.write(' ');
-      buffer.write(digits[i]);
-    }
-    return '$buffer ₽';
-  }
-}
-
-/// API has no company logos, so draw the company initials instead.
-class _CompanyLogo extends StatelessWidget {
-  final CompanyEntity company;
-
-  const _CompanyLogo({required this.company});
-
-  @override
-  Widget build(BuildContext context) {
-    // Skip separators like "-" in "БФТ - Холдинг".
-    final words = company.name
-        .split(RegExp(r'\s+'))
-        .where((w) => w.startsWith(RegExp(r'[\p{L}\p{N}]', unicode: true)));
-    final initials = words.take(2).map((w) => w[0].toUpperCase()).join();
-
-    return Container(
-      width: 48,
-      height: 48,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: AppColors.cream,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        initials,
-        style: const TextStyle(
-          color: AppColors.sage,
-          fontSize: 18,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
   }
 }

@@ -1,4 +1,4 @@
-import 'package:find_job_app/features/skills/data/models/SkillModel.dart';
+import 'package:find_job_app/features/vacancies/data/models/SkillModel.dart';
 import 'package:find_job_app/features/vacancies/data/models/CompanyModel.dart';
 import 'package:find_job_app/features/vacancies/domain/entities/VacancyEntity.dart';
 
