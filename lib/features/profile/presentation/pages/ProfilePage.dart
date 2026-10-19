@@ -104,10 +104,12 @@ class _ProfilePageState extends State<ProfilePage> {
         : null;
     // Space taken by the app bar and the bottom navigation bar,
     // since the list scrolls under both of them.
-    final insets = MediaQuery.paddingOf(context);
+    // final insets = MediaQuery.paddingOf(context);
+
 
     return ListView(
-      padding: EdgeInsets.fromLTRB(12, insets.top + 12, 12, insets.bottom + 12),
+      padding: EdgeInsets.all(12),
+      // padding: EdgeInsets.fromLTRB(12, insets.top + 12, 12, insets.bottom + 12),
       children: [
         // Header: photo, nickname (big) and name (smaller) next to it.
         _Section(
