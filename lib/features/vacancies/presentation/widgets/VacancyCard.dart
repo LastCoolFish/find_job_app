@@ -36,7 +36,7 @@ class VacancyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final grade = vacancy.grade;
-    final format = _formatLabel(vacancy.format);
+    final format = formatLabel(vacancy.format);
     final place = vacancy.place?.split(',').first.trim();
     final shownSkills = vacancy.skills.take(_maxSkills);
     final hiddenSkills = vacancy.skills.length - _maxSkills;
@@ -179,7 +179,7 @@ class VacancyCard extends StatelessWidget {
 
   /// Raw formats are long free-text strings ("на месте работодателя, удалённо
   /// или гибрид"), so collapse them to the most remote-friendly option.
-  static String? _formatLabel(String? raw) {
+  static String? formatLabel(String? raw) {
     if (raw == null) return null;
     final f = raw.toLowerCase();
     if (f.contains('удал')) return 'Можно удалённо';

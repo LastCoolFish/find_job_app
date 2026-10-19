@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:find_job_app/core/di/InjectionContainer.dart';
+import 'package:find_job_app/core/theme/AppColors.dart';
 import 'package:find_job_app/core/utils/Result.dart';
 import 'package:find_job_app/core/widgets/AsciiLoader.dart';
 import 'package:find_job_app/core/widgets/ErrorView.dart';
@@ -10,6 +10,7 @@ import 'package:find_job_app/core/widgets/LoadingIndicator.dart';
 import 'package:find_job_app/features/orders/domain/entities/OrderEntity.dart';
 import 'package:find_job_app/features/orders/domain/entities/OrderFilters.dart';
 import 'package:find_job_app/features/orders/domain/repositories/OrdersRepository.dart';
+import 'package:find_job_app/features/orders/presentation/pages/OrderDetailsPage.dart';
 import 'package:find_job_app/features/orders/presentation/widgets/OrderCard.dart';
 import 'package:find_job_app/features/orders/presentation/widgets/OrderFiltersSheet.dart';
 
@@ -63,6 +64,35 @@ class _OrdersPageState extends State<OrdersPage> {
     }
   }
 
+  /// Pull-to-refresh: loads the first page again with the current filters.
+  /// Old cards stay on screen until the new ones arrive; if the request
+  /// fails they stay as they were and a short message is shown.
+  Future<void> _refresh() async {
+    // Drop any page that is still loading, it belongs to the old list.
+    final requestId = ++_requestId;
+    setState(() => _isLoading = false);
+
+    final result = await _repository.getOrders(
+      filters: _filters,
+      offset: 0,
+      limit: _pageSize,
+    );
+    if (!mounted || requestId != _requestId) return;
+
+    result.when(
+      success: (page) => setState(() {
+        _orders
+          ..clear()
+          ..addAll(page);
+        _hasMore = page.length == _pageSize;
+        _error = null;
+      }),
+      failure: (failure) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Не удалось обновить: ${failure.message}')),
+      ),
+    );
+  }
+
   Future<void> _loadNextPage() async {
     if (_isLoading || !_hasMore) return;
 
@@ -96,16 +126,16 @@ class _OrdersPageState extends State<OrdersPage> {
   Future<void> _openFilters() async {
     _platforms ??= _repository.getPlatforms();
     // Don't keep a failed request cached: try again on the next open.
-    _platforms!.then((r) => r.when(success: (_) {}, failure: (_) => _platforms = null));
+    _platforms!.then(
+      (r) => r.when(success: (_) {}, failure: (_) => _platforms = null),
+    );
 
     final result = await showModalBottomSheet<OrderFilters>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (context) => OrderFiltersSheet(
-        initial: _filters,
-        platforms: _platforms!,
-      ),
+      builder: (context) =>
+          OrderFiltersSheet(initial: _filters, platforms: _platforms!),
     );
     // null = sheet was swiped away; same filters = nothing to reload.
     if (result == null || result == _filters) return;
@@ -167,21 +197,36 @@ class _OrdersPageState extends State<OrdersPage> {
 
     final showFooter = _hasMore || _error != null;
 
-    return ListView.builder(
-      controller: _scrollController,
-      itemCount: _orders.length + (showFooter ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _orders.length) return _buildFooter();
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      // The list scrolls under the app bar, so show the circle below it.
+      edgeOffset: MediaQuery.paddingOf(context).top,
+      color: AppColors.accent,
+      backgroundColor: AppColors.card,
+      child: ListView.builder(
+        controller: _scrollController,
+        // Lets the list be pulled down even when it is shorter than the screen.
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: _orders.length + (showFooter ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == _orders.length) return _buildFooter();
 
-        final order = _orders[index];
-        return OrderCard(
-          order: order,
-          onDetails: () => launchUrl(
-            Uri.parse(order.siteHref),
-            mode: LaunchMode.externalApplication,
-          ),
-        );
-      },
+          final order = _orders[index];
+          return OrderCard(
+            order: order,
+            onTap: () => _openDetails(order),
+            onDetails: () => _openDetails(order),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Opens the details on top of this screen. The list stays alive under it,
+  /// so going back shows it as it was: same items, same scroll position.
+  void _openDetails(OrderEntity order) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => OrderDetailsPage(order: order)),
     );
   }
 
@@ -189,7 +234,11 @@ class _OrdersPageState extends State<OrdersPage> {
     if (_error != null) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        child: ErrorView(message: _error!, onRetry: _loadNextPage, showArt: false),
+        child: ErrorView(
+          message: _error!,
+          onRetry: _loadNextPage,
+          showArt: false,
+        ),
       );
     }
     return const Padding(

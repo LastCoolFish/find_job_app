@@ -1,5 +1,8 @@
 import 'package:get_it/get_it.dart';
 import 'package:find_job_app/core/network/ApiClient.dart';
+import 'package:find_job_app/features/analytics/data/datasources/AnalyticsRemoteDataSource.dart';
+import 'package:find_job_app/features/analytics/data/repositories/AnalyticsRepositoryImpl.dart';
+import 'package:find_job_app/features/analytics/domain/repositories/AnalyticsRepository.dart';
 import 'package:find_job_app/features/orders/data/datasources/OrdersRemoteDataSource.dart';
 import 'package:find_job_app/features/orders/data/repositories/OrdersRepositoryImpl.dart';
 import 'package:find_job_app/features/orders/domain/repositories/OrdersRepository.dart';
@@ -39,5 +42,13 @@ void setupDependencies() {
   );
   sl.registerLazySingleton<ProfileRepository>(
     () => ProfileRepositoryImpl(sl()),
+  );
+
+  // Analytics feature
+  sl.registerLazySingleton<AnalyticsRemoteDataSource>(
+    () => AnalyticsRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<AnalyticsRepository>(
+    () => AnalyticsRepositoryImpl(sl()),
   );
 }

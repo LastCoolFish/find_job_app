@@ -8,7 +8,9 @@ import 'package:find_job_app/core/utils/Result.dart';
 import 'package:find_job_app/core/widgets/AsciiLoader.dart';
 import 'package:find_job_app/core/widgets/ErrorView.dart';
 import 'package:find_job_app/core/widgets/FindJobAppBar.dart';
+import 'package:find_job_app/core/widgets/InfoRow.dart';
 import 'package:find_job_app/core/widgets/InitialsAvatar.dart';
+import 'package:find_job_app/core/widgets/SectionCard.dart';
 import 'package:find_job_app/core/widgets/Tag.dart';
 import 'package:find_job_app/features/profile/domain/entities/ProfileEntity.dart';
 import 'package:find_job_app/features/profile/domain/entities/UserEntity.dart';
@@ -112,7 +114,7 @@ class _ProfilePageState extends State<ProfilePage> {
       // padding: EdgeInsets.fromLTRB(12, insets.top + 12, 12, insets.bottom + 12),
       children: [
         // Header: photo, nickname (big) and name (smaller) next to it.
-        _Section(
+        SectionCard(
           child: Row(
             children: [
               InitialsAvatar(name: profile.name ?? profile.username, size: 72),
@@ -144,23 +146,23 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
 
-        _Section(
+        SectionCard(
           title: 'Что ищу',
           child: Column(
             children: [
-              _InfoRow(
+              InfoRow(
                 icon: Symbols.payments,
                 label: 'Желаемая зарплата',
                 value: profile.desiredSalary == null
                     ? null
                     : formatMoney(profile.desiredSalary!),
               ),
-              _InfoRow(
+              InfoRow(
                 icon: Symbols.work,
                 label: 'Формат работы',
                 value: profile.desiredFormat,
               ),
-              _InfoRow(
+              InfoRow(
                 icon: Symbols.stacks,
                 label: 'Грейд',
                 value: gradeLabel,
@@ -169,13 +171,13 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
 
-        _Section(
+        SectionCard(
           title: 'Аккаунт',
           child: Column(
             children: [
-              _InfoRow(icon: Symbols.mail, label: 'Email', value: user.email),
-              _InfoRow(icon: Symbols.call, label: 'Телефон', value: user.phone),
-              _InfoRow(
+              InfoRow(icon: Symbols.mail, label: 'Email', value: user.email),
+              InfoRow(icon: Symbols.call, label: 'Телефон', value: user.phone),
+              InfoRow(
                 icon: Symbols.calendar_month,
                 label: 'На сайте с',
                 value: formatDateTime(user.createdAt),
@@ -184,7 +186,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
 
-        _Section(
+        SectionCard(
           title: 'Навыки',
           child: profile.skills.isEmpty
               ? Text('Навыки не указаны', style: TextStyle(color: AppColors.muted))
@@ -197,80 +199,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
         ),
       ],
-    );
-  }
-}
-
-/// White rounded block with an optional bold title, like the vacancy cards.
-class _Section extends StatelessWidget {
-  final String? title;
-  final Widget child;
-
-  const _Section({this.title, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: AppColors.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (title != null) ...[
-                Text(
-                  title!,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.ink,
-                        fontWeight: FontWeight.w800,
-                      ),
-                ),
-                const SizedBox(height: 12),
-              ],
-              child,
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// "icon  label ........ value" line. Shows "Не указано" when value is null.
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String? value;
-
-  const _InfoRow({required this.icon, required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: AppColors.accent),
-          const SizedBox(width: 12),
-          Text(label, style: TextStyle(color: AppColors.muted)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              value ?? 'Не указано',
-              textAlign: TextAlign.end,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: value == null ? AppColors.muted : AppColors.ink,
-                fontWeight: value == null ? FontWeight.w400 : FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

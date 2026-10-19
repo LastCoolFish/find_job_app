@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:find_job_app/core/di/InjectionContainer.dart';
+import 'package:find_job_app/core/theme/AppColors.dart';
 import 'package:find_job_app/core/utils/Result.dart';
 import 'package:find_job_app/core/widgets/AsciiLoader.dart';
 import 'package:find_job_app/core/widgets/ErrorView.dart';
@@ -10,6 +10,7 @@ import 'package:find_job_app/core/widgets/LoadingIndicator.dart';
 import 'package:find_job_app/features/vacancies/domain/entities/VacancyEntity.dart';
 import 'package:find_job_app/features/vacancies/domain/entities/VacancyFilters.dart';
 import 'package:find_job_app/features/vacancies/domain/repositories/VacanciesRepository.dart';
+import 'package:find_job_app/features/vacancies/presentation/pages/VacancyDetailsPage.dart';
 import 'package:find_job_app/features/vacancies/presentation/widgets/VacancyCard.dart';
 import 'package:find_job_app/features/vacancies/presentation/widgets/VacancyFiltersSheet.dart';
 
@@ -62,6 +63,35 @@ class _VacanciesPageState extends State<VacanciesPage> {
     }
   }
 
+  /// Pull-to-refresh: loads the first page again with the current filters.
+  /// Old cards stay on screen until the new ones arrive; if the request
+  /// fails they stay as they were and a short message is shown.
+  Future<void> _refresh() async {
+    // Drop any page that is still loading, it belongs to the old list.
+    final requestId = ++_requestId;
+    setState(() => _isLoading = false);
+
+    final result = await _repository.getVacancies(
+      filters: _filters,
+      offset: 0,
+      limit: _pageSize,
+    );
+    if (!mounted || requestId != _requestId) return;
+
+    result.when(
+      success: (page) => setState(() {
+        _vacancies
+          ..clear()
+          ..addAll(page);
+        _hasMore = page.length == _pageSize;
+        _error = null;
+      }),
+      failure: (failure) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Не удалось обновить: ${failure.message}')),
+      ),
+    );
+  }
+
   Future<void> _loadNextPage() async {
     // Scroll events fire many times per second, so ignore them while a page
     // is in flight or once everything is loaded.
@@ -98,16 +128,16 @@ class _VacanciesPageState extends State<VacanciesPage> {
   Future<void> _openFilters() async {
     _platforms ??= _repository.getPlatforms();
     // Don't keep a failed request cached: try again on the next open.
-    _platforms!.then((r) => r.when(success: (_) {}, failure: (_) => _platforms = null));
+    _platforms!.then(
+      (r) => r.when(success: (_) {}, failure: (_) => _platforms = null),
+    );
 
     final result = await showModalBottomSheet<VacancyFilters>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (context) => VacancyFiltersSheet(
-        initial: _filters,
-        platforms: _platforms!,
-      ),
+      builder: (context) =>
+          VacancyFiltersSheet(initial: _filters, platforms: _platforms!),
     );
     // null = sheet was swiped away; same filters = nothing to reload.
     if (result == null || result == _filters) return;
@@ -174,21 +204,38 @@ class _VacanciesPageState extends State<VacanciesPage> {
     // or the retry button.
     final showFooter = _hasMore || _error != null;
 
-    return ListView.builder(
-      controller: _scrollController,
-      itemCount: _vacancies.length + (showFooter ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _vacancies.length) return _buildFooter();
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      // The list scrolls under the app bar, so show the circle below it.
+      edgeOffset: MediaQuery.paddingOf(context).top,
+      color: AppColors.accent,
+      backgroundColor: AppColors.card,
+      child: ListView.builder(
+        controller: _scrollController,
+        // Lets the list be pulled down even when it is shorter than the screen.
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: _vacancies.length + (showFooter ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == _vacancies.length) return _buildFooter();
 
-        final vacancy = _vacancies[index];
-        return VacancyCard(
-          vacancy: vacancy,
-          onDetails: () => launchUrl(
-            Uri.parse(vacancy.siteHref),
-            mode: LaunchMode.externalApplication,
-          ),
-        );
-      },
+          final vacancy = _vacancies[index];
+          return VacancyCard(
+            vacancy: vacancy,
+            onTap: () => _openDetails(vacancy),
+            onDetails: () => _openDetails(vacancy),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Opens the details on top of this screen. The list stays alive under it,
+  /// so going back shows it as it was: same items, same scroll position.
+  void _openDetails(VacancyEntity vacancy) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => VacancyDetailsPage(vacancy: vacancy),
+      ),
     );
   }
 
@@ -196,7 +243,11 @@ class _VacanciesPageState extends State<VacanciesPage> {
     if (_error != null) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        child: ErrorView(message: _error!, onRetry: _loadNextPage, showArt: false),
+        child: ErrorView(
+          message: _error!,
+          onRetry: _loadNextPage,
+          showArt: false,
+        ),
       );
     }
     return const Padding(

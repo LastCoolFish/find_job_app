@@ -66,6 +66,9 @@
 | [`utils/Formatters.dart`](utils/Formatters.dart) | `formatMoney(300000)` → «300 000 ₽», `formatDateTime(date)` → «27 сентября, 13:37». |
 | [`widgets/FilterSheetParts.dart`](widgets/FilterSheetParts.dart) | Общие части окон фильтров: `FilterSheetFrame` (заголовок, «Сбросить», «Показать»), `FilterSection`, `filterInputDecoration`, `FilterChoices<T>` (чипы с одним выбором), `PlatformChoices` (чипы площадок с сервера). |
 | [`widgets/PlaceholderView.dart`](widgets/PlaceholderView.dart) | Заглушка для недоделанных экранов: иконка, заголовок, подпись по центру. |
+| [`widgets/SectionCard.dart`](widgets/SectionCard.dart) | Белая скруглённая плашка с необязательным заголовком (профиль, детали). |
+| [`widgets/InfoRow.dart`](widgets/InfoRow.dart) | Строка «иконка, подпись ... значение»; пустое значение показывается как «Не указано». |
+| [`widgets/OpenOnSiteBar.dart`](widgets/OpenOnSiteBar.dart) | Кнопка «Открыть на сайте», закреплённая внизу экрана деталей. |
 | [`widgets/LoadingIndicator.dart`](widgets/LoadingIndicator.dart) | Общий виджет спиннера загрузки, переиспользуется во всех фичах. |
 | [`widgets/ErrorView.dart`](widgets/ErrorView.dart) | Полноэкранная ошибка: картинка `errorPicture`, под ней текст «404 — ничего не найдено» и кнопка «Повторить» (`onRetry`, текст кнопки — `retryLabel`). С `showArt: false` (низ списка) вместо картинки и «404» показывается `message`. |
 | [`widgets/AsciiArt.dart`](widgets/AsciiArt.dart) | `AsciiArt` — многострочный текст моноширинным шрифтом (картинка занимает не больше `maxWidthFactor` ширины экрана, по умолчанию половину). `errorPicture` и `loadingPicture` — картинки символами Брайля для ошибки и загрузки. |
@@ -89,9 +92,10 @@
 | [`data/models/CompanyModel.dart`](features/vacancies/data/models/CompanyModel.dart) | data | `CompanyEntity` + `fromJson`. |
 | [`data/datasources/VacanciesRemoteDataSource.dart`](features/vacancies/data/datasources/VacanciesRemoteDataSource.dart) | data | Делает `GET /vacancies` через `ApiClient`, конвертирует ошибки Dio в `NetworkException`/`ServerException`. |
 | [`data/repositories/VacanciesRepositoryImpl.dart`](features/vacancies/data/repositories/VacanciesRepositoryImpl.dart) | data | Реализация интерфейса: вызывает datasource, ловит исключения, возвращает `Result<List<VacancyEntity>>`. |
-| [`presentation/pages/VacanciesPage.dart`](features/vacancies/presentation/pages/VacanciesPage.dart) | presentation | Экран целиком с подгрузкой при прокрутке: грузит вакансии страницами по 20 (`offset`/`limit`), следующую страницу запрашивает, когда до конца списка остаётся меньше 600 px (`ScrollController`). Внизу списка — крутилка или кнопка «Повторить». В шапке — иконка `Symbols.person_search`, надпись «FindJob» и кнопка фильтров (пока пустое окно снизу). |
+| [`presentation/pages/VacanciesPage.dart`](features/vacancies/presentation/pages/VacanciesPage.dart) | presentation | Экран целиком с подгрузкой при прокрутке и обновлением жестом «потянуть вниз» (`RefreshIndicator` → `_refresh()` заново грузит первую страницу с текущими фильтрами): грузит вакансии страницами по 20 (`offset`/`limit`), следующую страницу запрашивает, когда до конца списка остаётся меньше 600 px (`ScrollController`). Внизу списка — крутилка или кнопка «Повторить». В шапке — иконка `Symbols.person_search`, надпись «FindJob» и кнопка фильтров (пока пустое окно снизу). |
 | [`domain/entities/VacancyFilters.dart`](features/vacancies/domain/entities/VacancyFilters.dart) | domain | Фильтры поиска: должность, зарплата от, грейд, источник, сортировка. `toQueryParameters()` собирает параметры для `GET /vacancies/search`. Обходит особенности API: по умолчанию сортирует по `id` (иначе страницы повторяются), при сортировке по зарплате прячет вакансии без неё. Фильтра по городу нет: сервер не находит текст на кириллице. |
 | [`presentation/widgets/VacancyFiltersSheet.dart`](features/vacancies/presentation/widgets/VacancyFiltersSheet.dart) | presentation | Окно фильтров снизу. «Показать» закрывает окно и возвращает новые `VacancyFilters`, «Сбросить» очищает форму. Список источников берётся с сервера (`GET /vacancies/platforms`), страница загружает его один раз при первом открытии фильтров. |
+| [`presentation/pages/VacancyDetailsPage.dart`](features/vacancies/presentation/pages/VacancyDetailsPage.dart) | presentation | Детали вакансии: компания, зарплата, грейд/формат/полный адрес, полное описание, все навыки, статистика и кнопка «Открыть на сайте». Открывается через `Navigator.push` по нажатию на карточку или «Подробнее»; кнопка «назад» возвращает к тому же списку без перезагрузки. |
 | [`presentation/widgets/VacancyCard.dart`](features/vacancies/presentation/widgets/VacancyCard.dart) | presentation | Карточка одной вакансии: компания, должность, зарплата, грейд/формат/город, навыки, кнопки «Подробнее» (открывает вакансию на hh.ru / Хабр Карьере) и «В избранное». |
 
 ## `features/orders` — заказы (`GET /orders`)
@@ -106,9 +110,21 @@
 | [`data/models/CustomerModel.dart`](features/orders/data/models/CustomerModel.dart) | data | `CustomerEntity` + `fromJson`. |
 | [`data/datasources/OrdersRemoteDataSource.dart`](features/orders/data/datasources/OrdersRemoteDataSource.dart) | data | `GET /orders/search` с параметрами из `OrderFilters` постранично и `GET /orders/platforms`. |
 | [`data/repositories/OrdersRepositoryImpl.dart`](features/orders/data/repositories/OrdersRepositoryImpl.dart) | data | Реализация репозитория. |
-| [`presentation/pages/OrdersPage.dart`](features/orders/presentation/pages/OrdersPage.dart) | presentation | Список заказов с подгрузкой при прокрутке (по 20) и фильтрами. Логика та же, что в `VacanciesPage`: смена фильтров перезагружает список, опоздавшие ответы со старыми фильтрами отбрасываются. |
+| [`presentation/pages/OrdersPage.dart`](features/orders/presentation/pages/OrdersPage.dart) | presentation | Список заказов с подгрузкой при прокрутке (по 20), фильтрами и обновлением жестом «потянуть вниз». Логика та же, что в `VacanciesPage`: смена фильтров перезагружает список, опоздавшие ответы со старыми фильтрами отбрасываются. |
 | [`presentation/widgets/OrderFiltersSheet.dart`](features/orders/presentation/widgets/OrderFiltersSheet.dart) | presentation | Окно фильтров заказов: название, цена от/до, площадка (с сервера), сортировка. |
+| [`presentation/pages/OrderDetailsPage.dart`](features/orders/presentation/pages/OrderDetailsPage.dart) | presentation | Детали заказа: заказчик, цена, дата, полное описание, статистика и кнопка «Открыть на сайте». Открывается так же, как детали вакансии. |
 | [`presentation/widgets/OrderCard.dart`](features/orders/presentation/widgets/OrderCard.dart) | presentation | Карточка заказа: заказчик, площадка, название, цена, описание (до 3 строк, дальше многоточие), дата публикации, кнопка «Подробнее». |
+
+## `features/analytics` — статистика и события (`GET /analytics/vacancies|orders/{id}`, `POST /events`)
+
+| Файл | Слой | Назначение |
+|---|---|---|
+| [`domain/entities/EngagementEntity.dart`](features/analytics/domain/entities/EngagementEntity.dart) | domain | Статистика вакансии или заказа: просмотры, переходы на сайт, CTR, среднее время просмотра (сек). Соответствует `EngagementAnalyticsSchema`. |
+| [`domain/entities/EventTarget.dart`](features/analytics/domain/entities/EventTarget.dart) | domain | `VacancyTarget(id)` / `OrderTarget(id)` — о чём событие; `EventType` — `view_start`, `view_end`, `link_click`. |
+| [`domain/repositories/AnalyticsRepository.dart`](features/analytics/domain/repositories/AnalyticsRepository.dart) | domain | `getEngagement(target)` и `track(type, target)`. `track` не бросает ошибок: упавшее событие не должно ломать экран. |
+| [`data/...`](features/analytics/data/) | data | Модель, источник данных и реализация репозитория. События отправляются от `EnvConfig.currentUserId`. |
+| [`presentation/EngagementTracking.dart`](features/analytics/presentation/EngagementTracking.dart) | presentation | Миксин для экранов деталей: при открытии шлёт `view_start` и грузит статистику, при закрытии шлёт `view_end` с временем на экране, `openOnSite(url)` шлёт `link_click` и открывает ссылку. |
+| [`presentation/widgets/EngagementSection.dart`](features/analytics/presentation/widgets/EngagementSection.dart) | presentation | Блок «Статистика» на экранах деталей. |
 
 ## `features/profile` — профиль (`GET /profiles/by-user/{id}`, `GET /users/{id}`)
 
