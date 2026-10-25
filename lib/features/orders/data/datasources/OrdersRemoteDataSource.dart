@@ -14,6 +14,9 @@ abstract class OrdersRemoteDataSource {
 
   /// Distinct platform codes, e.g. ['fl', 'kwork'].
   Future<List<String>> getPlatforms();
+
+  /// `GET /orders/{id}`
+  Future<OrderModel> getOrder(int id);
 }
 
 class OrdersRemoteDataSourceImpl implements OrdersRemoteDataSource {
@@ -54,6 +57,19 @@ class OrdersRemoteDataSourceImpl implements OrdersRemoteDataSource {
     try {
       final response = await apiClient.dio.get('/orders/platforms');
       return (response.data as List<dynamic>).cast<String>();
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionError) {
+        throw const NetworkException();
+      }
+      throw ServerException(e.message ?? 'Server error');
+    }
+  }
+
+  @override
+  Future<OrderModel> getOrder(int id) async {
+    try {
+      final response = await apiClient.dio.get('/orders/$id');
+      return OrderModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionError) {
         throw const NetworkException();

@@ -38,7 +38,9 @@
 
 | Файл | Слой | Назначение |
 |---|---|---|
-| [`presentation/pages/HomePage.dart`](features/home/presentation/pages/HomePage.dart) | presentation | Вкладка «Главная». Пока заглушка (`PlaceholderView`). |
+| [`presentation/pages/HomePage.dart`](features/home/presentation/pages/HomePage.dart) | presentation | Вкладка «Главная», четыре блока, каждый грузится своим `Future` и `FutureBuilder`: «Подходит вам» (вакансии по первым трём навыкам профиля, отфильтрованные по грейду и зарплате; без навыков — поиск по зарплате и грейду; пустой профиль — плашка «Заполните профиль» с переходом во вкладку профиля), «Недавно смотрели» (история `view_start`, скрыт, если пусто), «Востребованные навыки» (чипы из `/analytics/top-skills`, открывают `SkillVacanciesPage`), «Свежие заказы» (3 последних, «Все» переключает на вкладку «Заказы»). Вкладки переключает колбэк `onOpenTab` из `MainShell`. Потянуть вниз — обновить всё. |
+| [`presentation/widgets/HomeSection.dart`](features/home/presentation/widgets/HomeSection.dart) | presentation | Блок главной: заголовок, кнопка справа и содержимое; варианты `loading`, `message`, `error`. |
+| [`presentation/widgets/CompactCard.dart`](features/home/presentation/widgets/CompactCard.dart) | presentation | Маленькая карточка для горизонтальных лент (вакансия или заказ): автор, площадка, название, деньги. |
 
 ## `features/settings` — настройки
 
@@ -87,7 +89,7 @@
 | [`domain/entities/SkillEntity.dart`](features/vacancies/domain/entities/SkillEntity.dart) | domain | Навык вакансии: `id`, `name`. |
 | [`data/models/SkillModel.dart`](features/vacancies/data/models/SkillModel.dart) | data | `SkillEntity` + `fromJson`. |
 | [`domain/entities/CompanyEntity.dart`](features/vacancies/domain/entities/CompanyEntity.dart) | domain | Краткая карточка компании (`id`, `name`, `rating`, `accreditation`), встроенная в ответ о вакансии — отдельного `/companies` эндпоинта на бэкенде нет. |
-| [`domain/repositories/VacanciesRepository.dart`](features/vacancies/domain/repositories/VacanciesRepository.dart) | domain | Интерфейс `getVacancies()` — то, с чем работает экран, не зная про Dio. |
+| [`domain/repositories/VacanciesRepository.dart`](features/vacancies/domain/repositories/VacanciesRepository.dart) | domain | Интерфейс `getVacancies()`, `getPlatforms()`, `getVacancy(id)` и `getVacanciesBySkills(skillIds)` (вакансии, где есть все указанные навыки) — то, с чем работает экран, не зная про Dio. |
 | [`data/models/VacancyModel.dart`](features/vacancies/data/models/VacancyModel.dart) | data | `VacancyEntity` + `fromJson`: парсит JSON вакансии, включая вложенные `company` и `skills`. |
 | [`data/models/CompanyModel.dart`](features/vacancies/data/models/CompanyModel.dart) | data | `CompanyEntity` + `fromJson`. |
 | [`data/datasources/VacanciesRemoteDataSource.dart`](features/vacancies/data/datasources/VacanciesRemoteDataSource.dart) | data | Делает `GET /vacancies` через `ApiClient`, конвертирует ошибки Dio в `NetworkException`/`ServerException`. |
@@ -96,6 +98,7 @@
 | [`domain/entities/VacancyFilters.dart`](features/vacancies/domain/entities/VacancyFilters.dart) | domain | Фильтры поиска: должность, зарплата от, грейд, источник, сортировка. `toQueryParameters()` собирает параметры для `GET /vacancies/search`. Обходит особенности API: по умолчанию сортирует по `id` (иначе страницы повторяются), при сортировке по зарплате прячет вакансии без неё. Фильтра по городу нет: сервер не находит текст на кириллице. |
 | [`presentation/widgets/VacancyFiltersSheet.dart`](features/vacancies/presentation/widgets/VacancyFiltersSheet.dart) | presentation | Окно фильтров снизу. «Показать» закрывает окно и возвращает новые `VacancyFilters`, «Сбросить» очищает форму. Список источников берётся с сервера (`GET /vacancies/platforms`), страница загружает его один раз при первом открытии фильтров. |
 | [`presentation/pages/VacancyDetailsPage.dart`](features/vacancies/presentation/pages/VacancyDetailsPage.dart) | presentation | Детали вакансии: компания, зарплата, грейд/формат/полный адрес, полное описание, все навыки, статистика и кнопка «Открыть на сайте». Открывается через `Navigator.push` по нажатию на карточку или «Подробнее»; кнопка «назад» возвращает к тому же списку без перезагрузки. |
+| [`presentation/pages/SkillVacanciesPage.dart`](features/vacancies/presentation/pages/SkillVacanciesPage.dart) | presentation | Все вакансии с одним навыком (`getVacanciesBySkills`). Открывается с чипов на главной. |
 | [`presentation/widgets/VacancyCard.dart`](features/vacancies/presentation/widgets/VacancyCard.dart) | presentation | Карточка одной вакансии: компания, должность, зарплата, грейд/формат/город, навыки, кнопки «Подробнее» (открывает вакансию на hh.ru / Хабр Карьере) и «В избранное». |
 
 ## `features/orders` — заказы (`GET /orders`)
@@ -105,7 +108,7 @@
 | [`domain/entities/OrderEntity.dart`](features/orders/domain/entities/OrderEntity.dart) | domain | Заказ: `id`, `name`, `description`, `price`, `publicationTimestamp`, вложенный `CustomerEntity`. |
 | [`domain/entities/OrderFilters.dart`](features/orders/domain/entities/OrderFilters.dart) | domain | Фильтры заказов: название, цена от/до, площадка, сортировка (`OrderSort`: новые / старые / дорогие / дешёвые). При сортировке по цене прячет заказы без цены. Поиск по названию на кириллице сервер пока не находит. |
 | [`domain/entities/CustomerEntity.dart`](features/orders/domain/entities/CustomerEntity.dart) | domain | Краткая карточка заказчика (`id`, `name`, `href`, `platform`) — встроена в ответ заказа, отдельного `/customers` эндпоинта нет. |
-| [`domain/repositories/OrdersRepository.dart`](features/orders/domain/repositories/OrdersRepository.dart) | domain | Интерфейс `getOrders(filters, offset, limit)` и `getPlatforms()`. |
+| [`domain/repositories/OrdersRepository.dart`](features/orders/domain/repositories/OrdersRepository.dart) | domain | Интерфейс `getOrders(filters, offset, limit)`, `getPlatforms()` и `getOrder(id)`. |
 | [`data/models/OrderModel.dart`](features/orders/data/models/OrderModel.dart) | data | `OrderEntity` + `fromJson`. |
 | [`data/models/CustomerModel.dart`](features/orders/data/models/CustomerModel.dart) | data | `CustomerEntity` + `fromJson`. |
 | [`data/datasources/OrdersRemoteDataSource.dart`](features/orders/data/datasources/OrdersRemoteDataSource.dart) | data | `GET /orders/search` с параметрами из `OrderFilters` постранично и `GET /orders/platforms`. |
@@ -121,7 +124,7 @@
 |---|---|---|
 | [`domain/entities/EngagementEntity.dart`](features/analytics/domain/entities/EngagementEntity.dart) | domain | Статистика вакансии или заказа: просмотры, переходы на сайт, CTR, среднее время просмотра (сек). Соответствует `EngagementAnalyticsSchema`. |
 | [`domain/entities/EventTarget.dart`](features/analytics/domain/entities/EventTarget.dart) | domain | `VacancyTarget(id)` / `OrderTarget(id)` — о чём событие; `EventType` — `view_start`, `view_end`, `link_click`. |
-| [`domain/repositories/AnalyticsRepository.dart`](features/analytics/domain/repositories/AnalyticsRepository.dart) | domain | `getEngagement(target)` и `track(type, target)`. `track` не бросает ошибок: упавшее событие не должно ломать экран. |
+| [`domain/repositories/AnalyticsRepository.dart`](features/analytics/domain/repositories/AnalyticsRepository.dart) | domain | `getEngagement(target)`, `track(type, target)`, `getTopSkills(count)` и `getRecentlyViewed(limit)` (история просмотров без повторов, новые первыми). `track` не бросает ошибок: упавшее событие не должно ломать экран. |
 | [`data/...`](features/analytics/data/) | data | Модель, источник данных и реализация репозитория. События отправляются от `EnvConfig.currentUserId`. |
 | [`presentation/EngagementTracking.dart`](features/analytics/presentation/EngagementTracking.dart) | presentation | Миксин для экранов деталей: при открытии шлёт `view_start` и грузит статистику, при закрытии шлёт `view_end` с временем на экране, `openOnSite(url)` шлёт `link_click` и открывает ссылку. |
 | [`presentation/widgets/EngagementSection.dart`](features/analytics/presentation/widgets/EngagementSection.dart) | presentation | Блок «Статистика» на экранах деталей. |
@@ -142,6 +145,6 @@
 
 ## Как добавить presentation-слой для новой фичи
 
-До экрана доведены `vacancies` и `orders`, `profile` показывает данные с сервера, у `home`/`settings` — заглушки. Новые фичи создаём по мере надобности. Чтобы показать новую фичу пользователю, нужно по образцу `features/vacancies/presentation/*` создать:
+До экрана доведены `vacancies` и `orders`, `profile` показывает данные с сервера, у `settings` — заглушка. Новые фичи создаём по мере надобности. Чтобы показать новую фичу пользователю, нужно по образцу `features/vacancies/presentation/*` создать:
 1. `<Feature>Page.dart` — `StatefulWidget`: в `initState` вызвать метод репозитория (`sl<<Feature>Repository>()`), хранить данные / `_isLoading` / `_error` в полях и обновлять через `setState` (пример с пагинацией — `VacanciesPage`).
 2. Показывать `LoadingIndicator` / `ErrorView` из `core/widgets`, пока данные грузятся или если пришла ошибка.

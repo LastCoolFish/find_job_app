@@ -41,4 +41,15 @@ class OrdersRepositoryImpl implements OrdersRepository {
       return Failed(ServerFailure(e.message));
     }
   }
+
+  @override
+  Future<Result<OrderEntity>> getOrder(int id) async {
+    try {
+      return Success(await remoteDataSource.getOrder(id));
+    } on NetworkException catch (e) {
+      return Failed(NetworkFailure(e.message));
+    } on ServerException catch (e) {
+      return Failed(ServerFailure(e.message));
+    }
+  }
 }

@@ -41,4 +41,28 @@ class VacanciesRepositoryImpl implements VacanciesRepository {
       return Failed(ServerFailure(e.message));
     }
   }
+
+  @override
+  Future<Result<VacancyEntity>> getVacancy(int id) async {
+    try {
+      return Success(await remoteDataSource.getVacancy(id));
+    } on NetworkException catch (e) {
+      return Failed(NetworkFailure(e.message));
+    } on ServerException catch (e) {
+      return Failed(ServerFailure(e.message));
+    }
+  }
+
+  @override
+  Future<Result<List<VacancyEntity>>> getVacanciesBySkills(
+    List<int> skillIds,
+  ) async {
+    try {
+      return Success(await remoteDataSource.getVacanciesBySkills(skillIds));
+    } on NetworkException catch (e) {
+      return Failed(NetworkFailure(e.message));
+    } on ServerException catch (e) {
+      return Failed(ServerFailure(e.message));
+    }
+  }
 }

@@ -12,4 +12,6 @@ abstract class OrdersRepository {
 
   /// Distinct platform codes, e.g. ['fl', 'kwork'].
   Future<Result<List<String>>> getPlatforms();
+
+  Future<Result<OrderEntity>> getOrder(int id);
 }

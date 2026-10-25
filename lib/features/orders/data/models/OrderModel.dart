@@ -20,11 +20,15 @@ class OrderModel extends OrderEntity {
       name: json['name'] as String,
       description: json['description'] as String,
       price: json['price'] as int?,
-      publicationTimestamp: DateTime.parse(json['publication_timestamp'] as String),
+      publicationTimestamp: DateTime.parse(
+        json['publication_timestamp'] as String,
+      ),
       platform: json['platform'] as String,
       platformId: json['platform_id'] as int,
       siteHref: json['site_href'] as String,
-      customer: CustomerModel.fromJson(json['customer'] as Map<String, dynamic>),
+      customer: CustomerModel.fromJson(
+        json['customer'] as Map<String, dynamic>,
+      ),
     );
   }
 }

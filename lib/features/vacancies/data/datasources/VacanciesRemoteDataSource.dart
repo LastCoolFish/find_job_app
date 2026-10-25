@@ -13,6 +13,12 @@ abstract class VacanciesRemoteDataSource {
 
   /// Distinct platform codes, e.g. ['habr', 'hh'].
   Future<List<String>> getPlatforms();
+
+  /// `GET /vacancies/{id}`
+  Future<VacancyModel> getVacancy(int id);
+
+  /// `GET /vacancies/by-skills`: vacancies that have every one of [skillIds].
+  Future<List<VacancyModel>> getVacanciesBySkills(List<int> skillIds);
 }
 
 class VacanciesRemoteDataSourceImpl implements VacanciesRemoteDataSource {
@@ -54,6 +60,37 @@ class VacanciesRemoteDataSourceImpl implements VacanciesRemoteDataSource {
     try {
       final response = await apiClient.dio.get('/vacancies/platforms');
       return (response.data as List<dynamic>).cast<String>();
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionError) {
+        throw const NetworkException();
+      }
+      throw ServerException(e.message ?? 'Server error');
+    }
+  }
+
+  @override
+  Future<VacancyModel> getVacancy(int id) async {
+    try {
+      final response = await apiClient.dio.get('/vacancies/$id');
+      return VacancyModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionError) {
+        throw const NetworkException();
+      }
+      throw ServerException(e.message ?? 'Server error');
+    }
+  }
+
+  @override
+  Future<List<VacancyModel>> getVacanciesBySkills(List<int> skillIds) async {
+    try {
+      final response = await apiClient.dio.get(
+        '/vacancies/by-skills',
+        queryParameters: {'skills_id': skillIds},
+      );
+      return unwrapList(response.data)
+          .map((json) => VacancyModel.fromJson(json as Map<String, dynamic>))
+          .toList();
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionError) {
         throw const NetworkException();

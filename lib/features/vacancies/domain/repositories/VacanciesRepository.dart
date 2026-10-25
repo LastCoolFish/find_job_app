@@ -11,4 +11,9 @@ abstract class VacanciesRepository {
 
   /// Distinct platform codes, e.g. ['habr', 'hh'].
   Future<Result<List<String>>> getPlatforms();
+
+  Future<Result<VacancyEntity>> getVacancy(int id);
+
+  /// Vacancies that have every one of [skillIds].
+  Future<Result<List<VacancyEntity>>> getVacanciesBySkills(List<int> skillIds);
 }

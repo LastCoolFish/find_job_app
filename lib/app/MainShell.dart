@@ -27,7 +27,12 @@ class _MainShellState extends State<MainShell> {
       // reload the lists or lose the scroll position.
       body: IndexedStack(
         index: _index,
-        children: const [HomePage(), VacanciesPage(), OrdersPage(), ProfilePage()],
+        children: [
+          HomePage(onOpenTab: (index) => setState(() => _index = index)),
+          const VacanciesPage(),
+          const OrdersPage(),
+          const ProfilePage(),
+        ],
       ),
       bottomNavigationBar: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),

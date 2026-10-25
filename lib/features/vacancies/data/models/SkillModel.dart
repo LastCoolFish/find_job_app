@@ -5,9 +5,6 @@ class SkillModel extends SkillEntity {
   const SkillModel({required super.id, required super.name});
 
   factory SkillModel.fromJson(Map<String, dynamic> json) {
-    return SkillModel(
-      id: json['id'] as int,
-      name: json['name'] as String,
-    );
+    return SkillModel(id: json['id'] as int, name: json['name'] as String);
   }
 }
