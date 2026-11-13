@@ -69,3 +69,5 @@ app.*.map.json
 # ── Linux / Windows ──────────────────────────────────────────────────
 /linux/flutter/ephemeral/
 /windows/flutter/ephemeral/
+# Widget Preview related
+.widget_preview/

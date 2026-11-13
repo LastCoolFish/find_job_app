@@ -22,14 +22,14 @@ class InitialsAvatar extends StatelessWidget {
       height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(size / 4),
+        color: AppColors.tertiary,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         initials,
         style: TextStyle(
           color: AppColors.accent,
-          fontSize: size * 0.375,
+          fontSize: size * .36,
           fontWeight: FontWeight.w800,
         ),
       ),

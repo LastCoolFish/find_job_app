@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:find_job_app/core/theme/AppTheme.dart';
-import 'package:find_job_app/app/MainShell.dart';
+import 'package:find_job_app/app/StartupPage.dart';
 
 class FindJobApp extends StatelessWidget {
   const FindJobApp({super.key});
@@ -9,8 +9,9 @@ class FindJobApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Find Job',
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const MainShell(),
+      home: const StartupPage(),
     );
   }
 }

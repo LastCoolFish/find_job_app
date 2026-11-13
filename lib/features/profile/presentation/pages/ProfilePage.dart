@@ -5,7 +5,7 @@ import 'package:find_job_app/core/di/InjectionContainer.dart';
 import 'package:find_job_app/core/theme/AppColors.dart';
 import 'package:find_job_app/core/utils/Formatters.dart';
 import 'package:find_job_app/core/utils/Result.dart';
-import 'package:find_job_app/core/widgets/AsciiLoader.dart';
+import 'package:find_job_app/core/widgets/LoadingIndicator.dart';
 import 'package:find_job_app/core/widgets/ErrorView.dart';
 import 'package:find_job_app/core/widgets/FindJobAppBar.dart';
 import 'package:find_job_app/core/widgets/InfoRow.dart';
@@ -21,7 +21,16 @@ import 'package:find_job_app/features/vacancies/presentation/widgets/VacancyCard
 /// Profile tab: avatar, nickname and name, profile/account fields and skills.
 /// There is no login yet, so it shows [EnvConfig.currentUserId].
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({
+    super.key,
+    required this.previewEmail,
+    required this.onOpenAccount,
+    required this.onExitPreview,
+  });
+
+  final String? previewEmail;
+  final VoidCallback onOpenAccount;
+  final VoidCallback onExitPreview;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -61,39 +70,67 @@ class _ProfilePageState extends State<ProfilePage> {
   void _retry() => setState(() => _future = _load());
 
   void _openSettings() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const SettingsPage()),
-    );
+    Navigator.of(context)
+        .push(MaterialPageRoute<void>(builder: (_) => const SettingsPage()));
   }
 
   @override
   Widget build(BuildContext context) {
+    final email = widget.previewEmail;
     return Scaffold(
       appBar: FindJobAppBar(
-        icon: Symbols.person,
+        section: 'Профиль',
         actions: [
-          IconButton(
+          IconButton.filledTonal(
             onPressed: _openSettings,
             tooltip: 'Настройки',
-            icon: const Icon(Symbols.settings, size: 28, weight: 600),
+            icon: const Icon(Symbols.settings),
           ),
         ],
       ),
-      body: FutureBuilder<Result<_ProfileData>>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const AsciiLoader();
-          }
-          final result = snapshot.data;
-          if (result == null) {
-            return ErrorView(message: '${snapshot.error}', onRetry: _retry);
-          }
-          return result.when(
-            success: (data) => _buildContent(data.profile, data.user),
-            failure: (failure) => ErrorView(message: failure.message, onRetry: _retry),
-          );
-        },
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        children: [
+          SectionCard(
+            title: 'Аккаунт FindJob',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (email == null)
+                  FilledButton(
+                    onPressed: widget.onOpenAccount,
+                    child: const Text('Войти или зарегистрироваться'),
+                  )
+                else ...[
+                  Text(email),
+                  const Text('Режим просмотра'),
+                  TextButton.icon(
+                    onPressed: widget.onExitPreview,
+                    icon: const Icon(Icons.logout_rounded),
+                    label: const Text('Выйти из аккаунта'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          FutureBuilder<Result<_ProfileData>>(
+            future: _future,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const FindJobLoading(message: 'Загружаем профиль');
+              }
+              final result = snapshot.data;
+              if (result == null) {
+                return ErrorView(message: '${snapshot.error}', onRetry: _retry);
+              }
+              return result.when(
+                success: (data) => _buildContent(data.profile, data.user),
+                failure: (failure) =>
+                    ErrorView(message: failure.message, onRetry: _retry),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -101,17 +138,12 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildContent(ProfileEntity profile, UserEntity user) {
     final textTheme = Theme.of(context).textTheme;
     final grade = profile.desiredGrade;
-    final gradeLabel = grade != null && grade >= 0 && grade < VacancyCard.grades.length
+    final gradeLabel =
+        grade != null && grade >= 0 && grade < VacancyCard.grades.length
         ? VacancyCard.grades[grade]
         : null;
-    // Space taken by the app bar and the bottom navigation bar,
-    // since the list scrolls under both of them.
-    // final insets = MediaQuery.paddingOf(context);
-
-
-    return ListView(
-      padding: EdgeInsets.all(12),
-      // padding: EdgeInsets.fromLTRB(12, insets.top + 12, 12, insets.bottom + 12),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Header: photo, nickname (big) and name (smaller) next to it.
         SectionCard(
@@ -137,7 +169,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       profile.name ?? 'Имя не указано',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: textTheme.bodyLarge?.copyWith(color: AppColors.muted),
+                      style: textTheme.bodyLarge?.copyWith(
+                        color: AppColors.muted,
+                      ),
                     ),
                   ],
                 ),
@@ -162,11 +196,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 label: 'Формат работы',
                 value: profile.desiredFormat,
               ),
-              InfoRow(
-                icon: Symbols.stacks,
-                label: 'Грейд',
-                value: gradeLabel,
-              ),
+              InfoRow(icon: Symbols.stacks, label: 'Грейд', value: gradeLabel),
             ],
           ),
         ),
@@ -189,7 +219,10 @@ class _ProfilePageState extends State<ProfilePage> {
         SectionCard(
           title: 'Навыки',
           child: profile.skills.isEmpty
-              ? Text('Навыки не указаны', style: TextStyle(color: AppColors.muted))
+              ? Text(
+                  'Навыки не указаны',
+                  style: TextStyle(color: AppColors.muted),
+                )
               : Wrap(
                   spacing: 6,
                   runSpacing: 6,

@@ -114,5 +114,18 @@ class AppPalettes {
     salary: Color(0xFF8E3B57),
   );
 
-  static const all = [sage, sunset, sky, coffee, blush];
+  static const lavender = AppPalette(
+    name: 'Lavender',
+    primary: Color(0xFF58547B),
+    secondary: Color(0xFFE7E4FF),
+    tertiary: Color(0xFFF4F1FA),
+    background: Color(0xFFFCFBFE),
+    onPrimary: Colors.white,
+    accent: Color(0xFF58547B),
+    ink: Color(0xFF26243A),
+    muted: Color(0xFF625E6D),
+    salary: Color(0xFF58547B),
+  );
+
+  static const all = [sage, sunset, sky, coffee, blush, lavender];
 }

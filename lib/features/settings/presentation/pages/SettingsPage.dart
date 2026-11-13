@@ -11,7 +11,6 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      extendBodyBehindAppBar: true,
       // Back arrow is added by AppBar automatically, since this screen is pushed.
       appBar: FindJobAppBar(title: 'Настройки', icon: Symbols.settings),
       body: PlaceholderView(

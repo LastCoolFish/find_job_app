@@ -5,6 +5,8 @@ import 'package:find_job_app/core/di/InjectionContainer.dart';
 import 'package:find_job_app/core/theme/AppColors.dart';
 import 'package:find_job_app/core/utils/Result.dart';
 import 'package:find_job_app/core/widgets/FindJobAppBar.dart';
+import 'package:find_job_app/core/widgets/FindJobArches.dart';
+import 'package:find_job_app/core/widgets/FindJobBrand.dart';
 import 'package:find_job_app/features/analytics/domain/entities/EventTarget.dart';
 import 'package:find_job_app/features/analytics/domain/entities/SkillDemandEntity.dart';
 import 'package:find_job_app/features/analytics/domain/repositories/AnalyticsRepository.dart';
@@ -31,6 +33,7 @@ class HomePage extends StatefulWidget {
 
   const HomePage({super.key, required this.onOpenTab});
 
+  static const vacanciesTab = 1;
   static const ordersTab = 2;
   static const profileTab = 3;
 
@@ -77,7 +80,9 @@ class _HomePageState extends State<HomePage> {
   /// request per skill), merged and narrowed by grade and salary.
   /// Without skills: a plain search by the desired salary and grade.
   Future<Result<List<VacancyEntity>?>> _loadPicks() async {
-    final profileResult = await _profiles.getProfileByUser(EnvConfig.currentUserId);
+    final profileResult = await _profiles.getProfileByUser(
+      EnvConfig.currentUserId,
+    );
     final profile = switch (profileResult) {
       Success(:final data) => data,
       // No profile yet looks the same as an empty one.
@@ -124,8 +129,10 @@ class _HomePageState extends State<HomePage> {
   static bool _fits(VacancyEntity vacancy, ProfileEntity profile) {
     final grade = profile.desiredGrade;
     final salary = profile.desiredSalary;
-    final gradeOk = grade == null || vacancy.grade == null || vacancy.grade == grade;
-    final salaryOk = salary == null || vacancy.salary == null || vacancy.salary! >= salary;
+    final gradeOk =
+        grade == null || vacancy.grade == null || vacancy.grade == grade;
+    final salaryOk =
+        salary == null || vacancy.salary == null || vacancy.salary! >= salary;
     return gradeOk && salaryOk;
   }
 
@@ -151,7 +158,8 @@ class _HomePageState extends State<HomePage> {
     ];
   }
 
-  void _openVacancy(VacancyEntity vacancy) => _push(VacancyDetailsPage(vacancy: vacancy));
+  void _openVacancy(VacancyEntity vacancy) =>
+      _push(VacancyDetailsPage(vacancy: vacancy));
 
   void _openOrder(OrderEntity order) => _push(OrderDetailsPage(order: order));
 
@@ -161,21 +169,107 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final insets = MediaQuery.paddingOf(context);
-
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: const FindJobAppBar(icon: Symbols.home),
+      appBar: const FindJobAppBar(),
       body: RefreshIndicator(
         onRefresh: _refresh,
-        // The page scrolls under the app bar, so show the circle below it.
-        edgeOffset: insets.top,
         color: AppColors.accent,
         backgroundColor: AppColors.card,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.only(top: insets.top + 8, bottom: insets.bottom + 16),
+          padding: const EdgeInsets.only(top: 8, bottom: 16),
           children: [
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 680),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: ColoredBox(
+                          color: AppColors.secondary,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(minHeight: 256),
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final showArt =
+                                    constraints.maxWidth >= 320 &&
+                                    MediaQuery.textScalerOf(context).scale(1) <=
+                                        1.15;
+                                return Stack(
+                                  children: [
+                                    if (showArt)
+                                      const Positioned(
+                                        bottom: -42,
+                                        right: -60,
+                                        width: 215,
+                                        height: 212,
+                                        child: FindJobArches(),
+                                      ),
+                                    Padding(
+                                      padding: EdgeInsets.fromLTRB(
+                                        22,
+                                        26,
+                                        showArt ? 102 : 22,
+                                        25,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Найди своё\nследующее\nместо',
+                                            style: findJobHeadline(context, 37),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            'Работа в компании\nили проект на фрилансе',
+                                            style: TextStyle(
+                                              color: AppColors.muted,
+                                              fontSize: 15,
+                                              height: 1.45,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Что ищешь?',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      _BrowseTile(
+                        title: 'Вакансии',
+                        description: 'Работа в штате и удалённо',
+                        icon: Symbols.work,
+                        onTap: () => widget.onOpenTab(HomePage.vacanciesTab),
+                      ),
+                      const SizedBox(height: 10),
+                      _BrowseTile(
+                        title: 'Заказы',
+                        description: 'Разовые задачи и проекты',
+                        icon: Symbols.assignment,
+                        onTap: () => widget.onOpenTab(HomePage.ordersTab),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
             _buildPicks(),
             _buildRecent(),
             _buildSkills(),
@@ -276,14 +370,18 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   for (final demand in skills)
                     ActionChip(
-                      onPressed: () => _push(SkillVacanciesPage(skill: demand.skill)),
+                      onPressed: () =>
+                          _push(SkillVacanciesPage(skill: demand.skill)),
                       backgroundColor: AppColors.card,
                       side: BorderSide.none,
                       shape: const StadiumBorder(),
                       label: Text.rich(
                         TextSpan(
                           text: demand.skill.name,
-                          style: TextStyle(color: AppColors.ink, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: AppColors.ink,
+                            fontWeight: FontWeight.w600,
+                          ),
                           children: [
                             TextSpan(
                               text: '  ${demand.vacancyCount}',
@@ -340,20 +438,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _vacancyCard(VacancyEntity vacancy) => CompactCard(
-        author: vacancy.company.name,
-        title: vacancy.jobTitle,
-        platform: vacancy.platform,
-        money: vacancy.salary,
-        onTap: () => _openVacancy(vacancy),
-      );
+    author: vacancy.company.name,
+    title: vacancy.jobTitle,
+    platform: vacancy.platform,
+    money: vacancy.salary,
+    onTap: () => _openVacancy(vacancy),
+  );
 
   Widget _orderCard(OrderEntity order) => CompactCard(
-        author: order.customer.name,
-        title: order.name,
-        platform: order.platform,
-        money: order.price,
-        onTap: () => _openOrder(order),
-      );
+    author: order.customer.name,
+    title: order.name,
+    platform: order.platform,
+    money: order.price,
+    onTap: () => _openOrder(order),
+  );
 }
 
 /// Row of [CompactCard]s that scrolls sideways.
@@ -412,10 +510,15 @@ class _FillProfileBanner extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       'Укажите навыки, грейд и зарплату, и здесь появятся подходящие вакансии',
-                      style: textTheme.bodySmall?.copyWith(color: AppColors.muted),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: AppColors.muted,
+                      ),
                     ),
                     const SizedBox(height: 10),
-                    FilledButton(onPressed: onTap, child: const Text('Заполнить')),
+                    FilledButton(
+                      onPressed: onTap,
+                      child: const Text('Заполнить'),
+                    ),
                   ],
                 ),
               ),
@@ -425,4 +528,58 @@ class _FillProfileBanner extends StatelessWidget {
       ),
     );
   }
+}
+
+class _BrowseTile extends StatelessWidget {
+  const _BrowseTile({
+    required this.title,
+    required this.description,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String title;
+  final String description;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: AppColors.card,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+      side: BorderSide(color: AppColors.border),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: ListTile(
+      minTileHeight: 88,
+      onTap: onTap,
+      leading: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: AppColors.secondary,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Icon(icon, color: AppColors.primary),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        description,
+        style: TextStyle(fontSize: 13, color: AppColors.muted),
+      ),
+      trailing: CircleAvatar(
+        radius: 15,
+        backgroundColor: AppColors.tertiary,
+        child: Icon(
+          Icons.arrow_forward_rounded,
+          size: 17,
+          color: AppColors.primary,
+        ),
+      ),
+    ),
+  );
 }

@@ -3,7 +3,6 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:find_job_app/core/di/InjectionContainer.dart';
 import 'package:find_job_app/core/theme/AppColors.dart';
 import 'package:find_job_app/core/utils/Result.dart';
-import 'package:find_job_app/core/widgets/AsciiLoader.dart';
 import 'package:find_job_app/core/widgets/ErrorView.dart';
 import 'package:find_job_app/core/widgets/FindJobAppBar.dart';
 import 'package:find_job_app/core/widgets/LoadingIndicator.dart';
@@ -126,9 +125,9 @@ class _VacanciesPageState extends State<VacanciesPage> {
   }
 
   Future<void> _openFilters() async {
-    _platforms ??= _repository.getPlatforms();
+    final platforms = _platforms ??= _repository.getPlatforms();
     // Don't keep a failed request cached: try again on the next open.
-    _platforms!.then(
+    platforms.then(
       (r) => r.when(success: (_) {}, failure: (_) => _platforms = null),
     );
 
@@ -137,10 +136,10 @@ class _VacanciesPageState extends State<VacanciesPage> {
       showDragHandle: true,
       isScrollControlled: true,
       builder: (context) =>
-          VacancyFiltersSheet(initial: _filters, platforms: _platforms!),
+          VacancyFiltersSheet(initial: _filters, platforms: platforms),
     );
     // null = sheet was swiped away; same filters = nothing to reload.
-    if (result == null || result == _filters) return;
+    if (!mounted || result == null || result == _filters) return;
     _applyFilters(result);
   }
 
@@ -161,25 +160,27 @@ class _VacanciesPageState extends State<VacanciesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Let the list scroll under the app bar, otherwise the rounded corners
-      // would only reveal the plain scaffold background.
-      extendBodyBehindAppBar: true,
       appBar: FindJobAppBar(
-        icon: Symbols.work,
+        section: 'Вакансии',
         actions: [
-          IconButton(
+          IconButton.filledTonal(
             onPressed: _openFilters,
             tooltip: 'Фильтры',
             icon: Badge(
               // Number of active filters, hidden when there are none.
               isLabelVisible: _filters.activeCount > 0,
               label: Text('${_filters.activeCount}'),
-              child: const Icon(Symbols.tune, size: 28, weight: 600),
+              child: const Icon(Symbols.tune, size: 23, weight: 500),
             ),
           ),
         ],
       ),
-      body: _buildBody(),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 680),
+          child: _buildBody(),
+        ),
+      ),
     );
   }
 
@@ -189,7 +190,9 @@ class _VacanciesPageState extends State<VacanciesPage> {
       if (_error != null) {
         return ErrorView(message: _error!, onRetry: _loadNextPage);
       }
-      if (_isLoading || _hasMore) return const AsciiLoader();
+      if (_isLoading || _hasMore) {
+        return const FindJobLoading(message: 'Загружаем вакансии');
+      }
       if (_filters.activeCount > 0) {
         return ErrorView(
           message: 'По этим фильтрам ничего не нашлось',
@@ -211,6 +214,7 @@ class _VacanciesPageState extends State<VacanciesPage> {
       color: AppColors.accent,
       backgroundColor: AppColors.card,
       child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
         controller: _scrollController,
         // Lets the list be pulled down even when it is shorter than the screen.
         physics: const AlwaysScrollableScrollPhysics(),

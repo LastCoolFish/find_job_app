@@ -9,38 +9,61 @@ class AppTheme {
   static ThemeData get light => fromPalette(AppColors.palette);
 
   static ThemeData fromPalette(AppPalette p) {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: p.primary,
-      brightness: p.brightness,
-    ).copyWith(
-      primary: p.primary,
-      onPrimary: p.onPrimary,
-      secondary: p.secondary,
-      onSecondary: p.ink,
-      tertiary: p.tertiary,
-      onTertiary: p.ink,
-      surface: p.background,
-      onSurface: p.ink,
-    );
+    final colorScheme =
+        ColorScheme.fromSeed(
+          seedColor: p.primary,
+          brightness: p.brightness,
+        ).copyWith(
+          primary: p.primary,
+          onPrimary: p.onPrimary,
+          secondary: p.secondary,
+          secondaryContainer: p.secondary,
+          onSecondaryContainer: p.primary,
+          onSecondary: p.ink,
+          tertiary: p.tertiary,
+          onTertiary: p.ink,
+          surface: p.background,
+          onSurface: p.ink,
+        );
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Inter',
+      splashFactory: InkRipple.splashFactory,
       brightness: p.brightness,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: p.background,
+      dividerColor: AppColors.border,
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFFF8F6F3),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 17,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.border),
+        ),
+      ),
       appBarTheme: AppBarTheme(
-        backgroundColor: p.tertiary,
+        backgroundColor: p.background,
         foregroundColor: p.ink,
-        // Keep the same colour when content scrolls under the bar,
-        // only add a soft shadow.
         surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 3,
-        shadowColor: Colors.black26,
+        scrolledUnderElevation: 0,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: p.primary,
           foregroundColor: p.onPrimary,
+          minimumSize: const Size(64, 52),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -51,18 +74,20 @@ class AppTheme {
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(color: p.accent),
       navigationBarTheme: NavigationBarThemeData(
-        // Same colour as the app bar, so the bar doesn't blend with the cards.
-        backgroundColor: p.tertiary,
+        backgroundColor: p.card,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: p.primary,
+        elevation: 0,
+        indicatorColor: p.secondary,
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
-            color: states.contains(WidgetState.selected) ? p.onPrimary : p.muted,
+            color: states.contains(WidgetState.selected) ? p.ink : p.primary,
+            size: 23,
           ),
         ),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
             color: states.contains(WidgetState.selected) ? p.ink : p.muted,
+            fontSize: 12,
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w700
                 : FontWeight.w500,

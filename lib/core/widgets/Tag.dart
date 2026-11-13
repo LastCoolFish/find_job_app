@@ -23,7 +23,7 @@ class Tag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: background ?? AppColors.background,
+        color: background ?? AppColors.tertiary,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -37,7 +37,10 @@ class Tag extends StatelessWidget {
             child: Text(
               label,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: AppColors.ink, fontSize: 13),
+              style: TextStyle(
+                color: foreground ?? AppColors.ink,
+                fontSize: 12,
+              ),
             ),
           ),
         ],

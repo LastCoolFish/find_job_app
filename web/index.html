@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -31,8 +31,60 @@
 
   <title>find_job_app</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    body { margin: 0; background: #fff; }
+    #findjob-startup {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      color: #58547b;
+      font: 700 22px system-ui, sans-serif;
+    }
+    #findjob-startup > div { text-align: center; }
+    #findjob-startup svg { display: block; margin: 28px auto 20px; }
+    #findjob-startup p {
+      margin: 0;
+      color: #625e6d;
+      font-size: 14px;
+      font-weight: 400;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #findjob-startup .moving-dot { display: none; }
+    }
+  </style>
 </head>
 <body>
+  <div id="findjob-startup" role="status">
+    <div>
+      FindJob
+      <svg width="186" height="150" viewBox="0 0 186 150" aria-hidden="true">
+        <path d="M15 144V90a78 78 0 0 1 156 0v54
+                 M26 144V90a67 67 0 0 1 134 0v54
+                 M38 144V90a55 55 0 0 1 110 0v54
+                 M49 144V90a44 44 0 0 1 88 0v54
+                 M60 144V90a33 33 0 0 1 66 0v54
+                 M72 144V90a21 21 0 0 1 42 0v54"
+              fill="none" stroke="#a29fba" stroke-width="1.2" stroke-linecap="round"/>
+        <circle class="moving-dot" r="5" fill="#58547b" stroke="#e7e4ff" stroke-width="3">
+          <animateMotion dur="2.4s" repeatCount="indefinite"
+            path="M15 120V90a78 78 0 0 1 156 0v30v-30a78 78 0 0 0-156 0v30"/>
+        </circle>
+        <circle class="moving-dot" r="4" fill="#58547b" stroke="#e7e4ff" stroke-width="3">
+          <animateMotion dur="2.4s" repeatCount="indefinite"
+            path="M137 119V90a44 44 0 0 0-88 0v29v-29a44 44 0 0 1 88 0v29"/>
+        </circle>
+      </svg>
+      <p>Открываем FindJob</p>
+    </div>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', () => {
+      document.getElementById('findjob-startup').remove();
+    }, { once: true });
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
