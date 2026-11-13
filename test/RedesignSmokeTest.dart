@@ -227,7 +227,7 @@ class _Analytics extends _UnusedCalls implements AnalyticsRepository {
       const Success([]);
 }
 
-class _Profile implements ProfileRepository {
+class _Profile extends _UnusedCalls implements ProfileRepository {
   @override
   Future<Result<ProfileEntity>> getProfileByUser(int userId) async => Success(
     ProfileEntity(

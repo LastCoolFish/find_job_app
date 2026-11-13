@@ -17,6 +17,8 @@ import 'package:find_job_app/features/profile/domain/entities/UserEntity.dart';
 import 'package:find_job_app/features/profile/domain/repositories/ProfileRepository.dart';
 import 'package:find_job_app/features/settings/presentation/pages/SettingsPage.dart';
 import 'package:find_job_app/features/vacancies/presentation/widgets/VacancyCard.dart';
+import 'package:find_job_app/features/profile/presentation/widgets/SkillsSheet.dart';
+import 'package:find_job_app/features/vacancies/domain/entities/SkillEntity.dart';
 
 /// Profile tab: avatar, nickname and name, profile/account fields and skills.
 /// Profile of the current authenticated user.
@@ -219,18 +221,56 @@ class _ProfilePageState extends State<ProfilePage> {
 
         SectionCard(
           title: 'Навыки',
-          child: profile.skills.isEmpty
-              ? Text(
-                  'Навыки не указаны',
-                  style: TextStyle(color: AppColors.muted),
-                )
-              : Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    for (final skill in profile.skills) Tag(label: skill.name),
-                  ],
-                ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: profile.skills.isEmpty
+                    ? Text(
+                        'Навыки не указаны',
+                        style: TextStyle(color: AppColors.muted),
+                      )
+                    : Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          for (final skill in profile.skills)
+                            Tag(label: skill.name),
+                        ],
+                      ),
+              ),
+              const SizedBox(width: 8),
+              IconButton.filledTonal(
+                tooltip: 'Изменить навыки',
+                onPressed: () async {
+                  final skills = await showModalBottomSheet<List<SkillEntity>>(
+                    context: context,
+                    isScrollControlled: true,
+                    isDismissible: false,
+                    enableDrag: false,
+                    builder: (_) => SkillsSheet(profile: profile),
+                  );
+                  if (!mounted || skills == null) return;
+                  final updated = ProfileEntity(
+                    id: profile.id,
+                    userId: profile.userId,
+                    username: profile.username,
+                    name: profile.name,
+                    desiredSalary: profile.desiredSalary,
+                    desiredFormat: profile.desiredFormat,
+                    desiredGrade: profile.desiredGrade,
+                    skills: skills,
+                  );
+                  setState(() {
+                    _future = Future.value(
+                      Success((profile: updated, user: user)),
+                    );
+                  });
+                },
+                icon: const Icon(Symbols.edit),
+              ),
+            ],
+          ),
         ),
       ],
     );

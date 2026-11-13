@@ -5,6 +5,7 @@ import 'package:find_job_app/features/profile/data/datasources/ProfileRemoteData
 import 'package:find_job_app/features/profile/domain/entities/ProfileEntity.dart';
 import 'package:find_job_app/features/profile/domain/entities/UserEntity.dart';
 import 'package:find_job_app/features/profile/domain/repositories/ProfileRepository.dart';
+import 'package:find_job_app/features/vacancies/domain/entities/SkillEntity.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileRemoteDataSource remoteDataSource;
@@ -18,6 +19,14 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<Result<UserEntity>> getUser(int userId) =>
       _guard(() => remoteDataSource.getUser(userId));
+
+  @override
+  Future<Result<List<SkillEntity>>> getSkills() =>
+      _guard(() => remoteDataSource.getSkills());
+
+  @override
+  Future<Result<ProfileEntity>> setSkills(int profileId, List<int> skillIds) =>
+      _guard(() => remoteDataSource.setSkills(profileId, skillIds));
 
   /// Turns data-layer exceptions into a Result.
   Future<Result<T>> _guard<T>(Future<T> Function() request) async {
