@@ -1,0 +1,81 @@
+name: Build and release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  android-web-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.1'
+          channel: stable
+          cache: true
+      - name: Install Linux dependencies
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libsecret-1-dev libjsoncpp-dev liblzma-dev
+      - run: flutter pub get --enforce-lockfile
+      - run: flutter build apk --release
+      - run: flutter build web --release
+      - run: flutter build linux --release
+      - name: Package builds
+        run: |
+          mkdir dist
+          cp build/app/outputs/flutter-apk/app-release.apk dist/FindJob-android.apk
+          (cd build/web && zip -qr ../../dist/FindJob-web.zip .)
+          tar -czf dist/FindJob-linux-x64.tar.gz -C build/linux/x64/release/bundle .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-android-web
+          path: dist/*
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.1'
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: flutter build windows --release
+      - name: Package Windows build
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath FindJob-windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: FindJob-windows-x64.zip
+          if-no-files-found: error
+
+  release:
+    needs: [android-web-linux, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" dist/* \
+            --target "$COMMIT" \
+            --title "FindJob $TAG" \
+            --notes 'Автоматическая сборка. Android APK подписан отладочным ключом и предназначен для тестирования. API приложения сейчас настроен на localhost:8000.'
