@@ -49,6 +49,7 @@ class AnalyticsRemoteDataSourceImpl implements AnalyticsRemoteDataSource {
   }) => _guard(() async {
     await apiClient.dio.post(
       '/events',
+      options: Options(extra: {'requiresAuth': true}),
       data: {
         'user_id': userId,
         'event_type': type.apiName,
@@ -75,6 +76,7 @@ class AnalyticsRemoteDataSourceImpl implements AnalyticsRemoteDataSource {
       _guard(() async {
         final response = await apiClient.dio.get(
           '/users/$userId/events',
+          options: Options(extra: {'requiresAuth': true}),
           queryParameters: {
             'event_type': EventType.viewStart.apiName,
             'order': 'desc',

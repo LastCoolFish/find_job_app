@@ -40,6 +40,7 @@ dependencies:
   get_it: ^7.7.0
   url_launcher: ^6.3.3
   material_symbols_icons: ^4.2960.0
+  flutter_secure_storage: ^11.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -19,7 +19,7 @@ import 'package:find_job_app/features/settings/presentation/pages/SettingsPage.d
 import 'package:find_job_app/features/vacancies/presentation/widgets/VacancyCard.dart';
 
 /// Profile tab: avatar, nickname and name, profile/account fields and skills.
-/// There is no login yet, so it shows [EnvConfig.currentUserId].
+/// Profile of the current authenticated user.
 class ProfilePage extends StatefulWidget {
   const ProfilePage({
     super.key,
@@ -51,7 +51,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<Result<_ProfileData>> _load() async {
-    const userId = EnvConfig.currentUserId;
+    final userId = EnvConfig.currentUserId;
     // Both requests run at the same time.
     final (profileResult, userResult) = await (
       _repository.getProfileByUser(userId),
@@ -70,8 +70,9 @@ class _ProfilePageState extends State<ProfilePage> {
   void _retry() => setState(() => _future = _load());
 
   void _openSettings() {
-    Navigator.of(context)
-        .push(MaterialPageRoute<void>(builder: (_) => const SettingsPage()));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const SettingsPage()));
   }
 
   @override
@@ -103,7 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   )
                 else ...[
                   Text(email),
-                  const Text('Режим просмотра'),
+                  const Text('Вы вошли в аккаунт'),
                   TextButton.icon(
                     onPressed: widget.onExitPreview,
                     icon: const Icon(Icons.logout_rounded),

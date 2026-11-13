@@ -1,6 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:find_job_app/core/di/InjectionContainer.dart';
+import 'package:find_job_app/core/network/ApiClient.dart';
+import 'package:find_job_app/core/config/EnvConfig.dart';
+import 'package:find_job_app/features/auth/domain/repositories/AuthRepository.dart';
 import 'package:find_job_app/app/MainShell.dart';
 import 'package:find_job_app/core/theme/AppColors.dart';
 import 'package:find_job_app/core/widgets/FindJobArches.dart';
@@ -37,7 +42,37 @@ class _StartupPageState extends State<StartupPage>
     });
   }
 
-  void _openWelcome() {
+  String? _startupError;
+
+  Future<void> _openWelcome() async {
+    try {
+      final token = await sl<AuthRepository>().accessToken();
+      if (!mounted) return;
+      if (token != null) {
+        final response = await sl<ApiClient>().dio.get<Map<String, dynamic>>(
+          '/auth/me',
+          options: Options(extra: {'requiresAuth': true}),
+        );
+        EnvConfig.currentUserId = response.data!['id'] as int;
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(
+            builder: (_) => MainShell(
+              initialPreviewEmail: response.data!['email'] as String,
+            ),
+          ),
+        );
+        return;
+      }
+    } catch (_) {
+      if (mounted)
+        setState(
+          () => _startupError =
+              'Не удалось проверить сессию. Проверьте соединение.',
+        );
+      return;
+    }
+    if (!mounted) return;
     final navigator = Navigator.of(context);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     navigator.pushReplacement<void, void>(
@@ -97,6 +132,16 @@ class _StartupPageState extends State<StartupPage>
               mainAxisSize: MainAxisSize.min,
               children: [
                 const FindJobBrand(),
+                if (_startupError != null) ...[
+                  Text(_startupError!),
+                  TextButton(
+                    onPressed: () {
+                      setState(() => _startupError = null);
+                      _openWelcome();
+                    },
+                    child: const Text('Повторить'),
+                  ),
+                ],
                 const SizedBox(height: 28),
                 SizedBox(
                   width: 186,

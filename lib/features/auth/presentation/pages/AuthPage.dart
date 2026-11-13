@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:find_job_app/app/AuthNavigation.dart';
+import 'package:find_job_app/features/auth/domain/repositories/AuthRepository.dart';
+import 'package:find_job_app/core/config/EnvConfig.dart';
+import 'package:find_job_app/core/di/InjectionContainer.dart';
+import 'package:find_job_app/core/network/ApiClient.dart';
+import 'package:find_job_app/features/auth/data/datasources/AuthRemoteDataSource.dart';
 import 'package:find_job_app/core/theme/AppColors.dart';
 import 'package:find_job_app/core/widgets/FindJobArches.dart';
 import 'package:find_job_app/core/widgets/FindJobBrand.dart';
@@ -202,25 +209,71 @@ class _AccountForm extends StatefulWidget {
 class _AccountFormState extends State<_AccountForm> {
   final _form = GlobalKey<FormState>();
   final _email = TextEditingController();
+  final _password = TextEditingController();
   bool _hidePassword = true;
+  bool _submitting = false;
 
   @override
   void dispose() {
     _email.dispose();
+    _password.dispose();
     super.dispose();
   }
 
-  void _submit() {
-    if (ModalRoute.of(context)?.isCurrent != true ||
+  Future<void> _submit() async {
+    if (_submitting ||
+        ModalRoute.of(context)?.isCurrent != true ||
         !_form.currentState!.validate()) {
       return;
     }
     final email = _email.text.trim();
-    final complete = widget.onComplete;
-    if (complete == null) {
-      Navigator.of(context).pop(email);
-    } else {
-      complete(email);
+    setState(() => _submitting = true);
+    var registered = false;
+    try {
+      if (widget.register) {
+        await AuthRemoteDataSource(
+          sl<ApiClient>(),
+        ).register(email: email, password: _password.text);
+        registered = true;
+      }
+      await sl<AuthRepository>().login(email, _password.text);
+      final response = await sl<ApiClient>().dio.get<Map<String, dynamic>>(
+        '/auth/me',
+        options: Options(extra: {'requiresAuth': true}),
+      );
+      EnvConfig.currentUserId = response.data!['id'] as int;
+      resetLoginRedirect();
+      if (!mounted) return;
+      final complete = widget.onComplete;
+      if (complete == null) {
+        Navigator.of(context).pop(email);
+      } else {
+        complete(email);
+      }
+    } on DioException catch (error) {
+      if (!mounted) return;
+      final message = registered
+          ? 'Аккаунт создан, но войти не удалось. Попробуйте войти вручную.'
+          : widget.register && error.response?.statusCode == 409
+          ? 'Пользователь с такой почтой уже существует.'
+          : !widget.register && error.response?.statusCode == 401
+          ? 'Неверная почта или пароль.'
+          : error.response?.statusCode == 403
+          ? 'Аккаунт заблокирован.'
+          : 'Не удалось выполнить запрос. Проверьте данные и соединение.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+      if (registered) Navigator.of(context).pop();
+    } catch (_) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Не удалось сохранить сессию. Попробуйте ещё раз.'),
+          ),
+        );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
     }
   }
 
@@ -323,6 +376,7 @@ class _AccountFormState extends State<_AccountForm> {
                           ),
                           const SizedBox(height: 18),
                           TextFormField(
+                            controller: _password,
                             obscureText: _hidePassword,
                             textInputAction: TextInputAction.done,
                             onFieldSubmitted: (_) => _submit(),
@@ -359,16 +413,20 @@ class _AccountFormState extends State<_AccountForm> {
                           ),
                           const SizedBox(height: 24),
                           FilledButton.icon(
-                            onPressed: _submit,
+                            onPressed: _submitting ? null : _submit,
                             iconAlignment: IconAlignment.end,
                             icon: const Icon(Icons.arrow_forward_rounded),
-                            label: Text(register ? 'Создать аккаунт' : 'Войти'),
+                            label: Text(
+                              _submitting
+                                  ? (register
+                                        ? 'Создаём аккаунт...'
+                                        : 'Входим...')
+                                  : register
+                                  ? 'Создать аккаунт'
+                                  : 'Войти',
+                            ),
                           ),
                           const SizedBox(height: 12),
-                          const Text(
-                            'Тестовый режим. Данные не отправляются на сервер.',
-                            textAlign: TextAlign.center,
-                          ),
                         ],
                       ),
                     ),

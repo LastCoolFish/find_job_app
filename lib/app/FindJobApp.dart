@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:find_job_app/app/AuthNavigation.dart';
 import 'package:find_job_app/core/theme/AppTheme.dart';
 import 'package:find_job_app/app/StartupPage.dart';
 
@@ -8,6 +9,7 @@ class FindJobApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Find Job',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,

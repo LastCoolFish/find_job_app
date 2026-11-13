@@ -124,7 +124,7 @@ class AppPalettes {
     accent: Color(0xFF58547B),
     ink: Color(0xFF26243A),
     muted: Color(0xFF625E6D),
-    salary: Color(0xFF58547B),
+    salary: Color(0xFF3E805D),
   );
 
   static const all = [sage, sunset, sky, coffee, blush, lavender];

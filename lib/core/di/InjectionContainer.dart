@@ -1,3 +1,10 @@
+import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:find_job_app/core/config/EnvConfig.dart';
+import 'package:find_job_app/core/network/AuthInterceptor.dart';
+import 'package:find_job_app/app/AuthNavigation.dart';
+import 'package:find_job_app/features/auth/domain/repositories/AuthRepository.dart';
+import 'package:find_job_app/features/auth/data/repositories/AuthRepositoryImpl.dart';
 import 'package:get_it/get_it.dart';
 import 'package:find_job_app/core/network/ApiClient.dart';
 import 'package:find_job_app/features/analytics/data/datasources/AnalyticsRemoteDataSource.dart';
@@ -18,7 +25,36 @@ final sl = GetIt.instance;
 /// Registers every dependency for the app. Call once from main() before runApp.
 void setupDependencies() {
   // Core
-  sl.registerLazySingleton<ApiClient>(() => ApiClient.create());
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      Dio(
+        BaseOptions(
+          baseUrl: EnvConfig.baseUrl,
+          connectTimeout: EnvConfig.connectTimeout,
+          receiveTimeout: EnvConfig.receiveTimeout,
+        ),
+      ),
+      const FlutterSecureStorage(),
+    ),
+  );
+  sl.registerLazySingleton<ApiClient>(() {
+    final client = ApiClient.create();
+    final retry = Dio(
+      BaseOptions(
+        baseUrl: EnvConfig.baseUrl,
+        connectTimeout: EnvConfig.connectTimeout,
+        receiveTimeout: EnvConfig.receiveTimeout,
+      ),
+    );
+    client.dio.interceptors.add(
+      AuthInterceptor(
+        sl<AuthRepository>(),
+        retry,
+        onLoginRequired: requireLogin,
+      ),
+    );
+    return client;
+  });
 
   // Vacancies feature
   sl.registerLazySingleton<VacanciesRemoteDataSource>(
@@ -32,9 +68,7 @@ void setupDependencies() {
   sl.registerLazySingleton<OrdersRemoteDataSource>(
     () => OrdersRemoteDataSourceImpl(sl()),
   );
-  sl.registerLazySingleton<OrdersRepository>(
-    () => OrdersRepositoryImpl(sl()),
-  );
+  sl.registerLazySingleton<OrdersRepository>(() => OrdersRepositoryImpl(sl()));
 
   // Profile feature
   sl.registerLazySingleton<ProfileRemoteDataSource>(

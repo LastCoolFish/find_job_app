@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:find_job_app/core/config/EnvConfig.dart';
+import 'package:find_job_app/core/di/InjectionContainer.dart';
+import 'package:find_job_app/features/auth/domain/repositories/AuthRepository.dart';
+import 'package:find_job_app/app/AuthNavigation.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:find_job_app/core/theme/AppColors.dart';
 import 'package:find_job_app/features/auth/presentation/pages/AuthPage.dart';
@@ -46,8 +50,9 @@ class _MainShellState extends State<MainShell>
   }
 
   Future<void> _openAccount() async {
-    final email = await Navigator.of(context)
-        .push<String>(MaterialPageRoute(builder: (_) => const AuthPage()));
+    final email = await Navigator.of(
+      context,
+    ).push<String>(MaterialPageRoute(builder: (_) => const AuthPage()));
     if (mounted && email != null) setState(() => _previewEmail = email);
   }
 
@@ -64,7 +69,20 @@ class _MainShellState extends State<MainShell>
           ProfilePage(
             previewEmail: _previewEmail,
             onOpenAccount: _openAccount,
-            onExitPreview: () => setState(() => _previewEmail = null),
+            onExitPreview: () async {
+              try {
+                await sl<AuthRepository>().logout();
+                EnvConfig.currentUserId = 0;
+                requireLogin();
+              } catch (_) {
+                if (context.mounted)
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Не удалось выйти. Проверьте соединение.'),
+                    ),
+                  );
+              }
+            },
           ),
         ],
       ),

@@ -22,11 +22,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       _get('/profiles/by-user/$userId', ProfileModel.fromJson);
 
   @override
-  Future<UserModel> getUser(int userId) => _get('/users/$userId', UserModel.fromJson);
+  Future<UserModel> getUser(int userId) =>
+      _get('/users/$userId', UserModel.fromJson);
 
   Future<T> _get<T>(String path, T Function(Map<String, dynamic>) parse) async {
     try {
-      final response = await apiClient.dio.get(path);
+      final response = await apiClient.dio.get(
+        path,
+        options: path.startsWith('/users/')
+            ? Options(extra: {'requiresAuth': true})
+            : null,
+      );
       return parse(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionError) {
